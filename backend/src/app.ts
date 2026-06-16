@@ -10,6 +10,7 @@ import { userRouter } from "./modules/users/user.routes";
 import { walletRouter } from "./modules/wallet/wallet.routes";
 import { machineRouter } from "./modules/machines/machine.routes";
 import { depositRouter } from "./modules/deposits/deposit.routes";
+import { rewardRouter } from "./modules/rewards/reward.routes";
 
 export function createApp() {
   const app = express();
@@ -44,6 +45,7 @@ export function createApp() {
   app.use("/api/wallet", walletRouter);
   app.use("/api/machines", machineRouter);
   app.use("/api/deposits", depositRouter);
+  app.use("/api/rewards", rewardRouter);
 
   app.use((error: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (error instanceof ZodError) {

@@ -2,6 +2,7 @@ import { createApp } from "./app";
 import { connectDatabase } from "./config/db";
 import { env } from "./config/env";
 import { startDepositVerificationCron } from "./jobs/deposit-verification-cron";
+import { startRewardCron } from "./jobs/reward-cron";
 
 async function bootstrap(): Promise<void> {
   await connectDatabase();
@@ -11,6 +12,8 @@ async function bootstrap(): Promise<void> {
   if (env.BSC_RPC_URL && env.BSC_USDT_CONTRACT_ADDRESS && env.PLATFORM_BSC_DEPOSIT_ADDRESS) {
     startDepositVerificationCron();
   }
+
+  startRewardCron();
 
   app.listen(env.PORT, () => {
     console.log(`AurumX API listening on port ${env.PORT}`);
