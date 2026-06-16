@@ -4,7 +4,7 @@ Backend base de AurumX Mining construido con Node.js, Express, TypeScript, Mongo
 
 ## Estado actual
 
-Versión: `v0.4.0`
+Versión: `v0.5.0`
 
 Incluye:
 
@@ -21,6 +21,11 @@ Incluye:
 - Verificación de transferencia oficial USDT BEP20.
 - Activación automática de máquinas pagadas tras depósito confirmado.
 - Cron de reintento para depósitos pendientes de confirmaciones.
+- RewardService para pago de recompensas por ciclo individual de 24 horas.
+- Cron de recompensas cada 1 minuto.
+- Acreditación automática a wallet interna.
+- MachineRewardLog idempotente por ciclo.
+- Cierre automático de máquinas al llegar al 200% del payout máximo.
 
 ## Máquinas oficiales
 
@@ -112,6 +117,14 @@ POST /api/deposits/orders/:id/submit-hash
 GET  /api/deposits/my
 ```
 
+### Recompensas
+
+```txt
+POST /api/rewards/run
+```
+
+Este endpoint requiere usuario admin. El cron interno se ejecuta automáticamente cada minuto cuando el backend está corriendo.
+
 ## Flujo de depósito automático
 
 1. Usuario crea orden de depósito para una máquina pagada.
@@ -128,10 +141,21 @@ GET  /api/deposits/my
 6. Si es válido, la máquina pagada se activa automáticamente.
 7. Si faltan confirmaciones, queda pendiente y el cron reintenta.
 
+## Flujo de recompensas
+
+1. Cada máquina activa tiene su propio `nextRewardAt`.
+2. El cron revisa cada minuto las máquinas vencidas.
+3. Si pasaron 24 horas desde el último ciclo, calcula la recompensa.
+4. La potencia solo aplica a máquinas pagadas.
+5. La recompensa nunca supera el payout restante.
+6. Se crea `MachineRewardLog` con índice único por máquina/ciclo.
+7. Se acredita wallet mediante `WalletTransaction`.
+8. Si llega al 200%, la máquina queda `COMPLETED`.
+
 ## Próximo bloque recomendado
 
-- `RewardService`
-- Cron de recompensas por ciclo individual de 24 horas
-- Acreditación a wallet interna
-- Completar máquina al llegar al 200%
-- `MachineRewardLog` idempotente por ciclo
+- Retiros manuales
+- `WithdrawalRequest.model.ts`
+- `WithdrawalService`
+- Solicitud de retiro cada 24 horas
+- Admin aprueba/rechaza retiro con hash BEP20
