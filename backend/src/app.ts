@@ -8,6 +8,7 @@ import { errorMiddleware } from "./middlewares/error.middleware";
 import { authRouter } from "./modules/auth/auth.routes";
 import { userRouter } from "./modules/users/user.routes";
 import { walletRouter } from "./modules/wallet/wallet.routes";
+import { machineRouter } from "./modules/machines/machine.routes";
 
 export function createApp() {
   const app = express();
@@ -40,6 +41,7 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/users", userRouter);
   app.use("/api/wallet", walletRouter);
+  app.use("/api/machines", machineRouter);
 
   app.use((error: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (error instanceof ZodError) {
