@@ -143,4 +143,118 @@ export class WalletService {
 
     return { wallet, transaction };
   }
+
+  static async approveLockedWithdrawal(params: {
+    userId: Types.ObjectId;
+    amount: number;
+    reference: WalletReference;
+    metadata?: Record<string, unknown>;
+    session?: ClientSession;
+  }) {
+    assertPositiveAmount(params.amount);
+
+    const wallet = await WalletModel.findOne({ userId: params.userId }).session(
+      params.session ?? null
+    );
+
+    if (!wallet) {
+      throw notFound("Wallet not found", "WALLET_NOT_FOUND");
+    }
+
+    const amount = roundUSDT(params.amount);
+
+    if (wallet.lockedUSDT < amount) {
+      throw badRequest("Insufficient locked balance", "INSUFFICIENT_LOCKED_BALANCE");
+    }
+
+    const lockedBefore = roundUSDT(wallet.lockedUSDT);
+    const lockedAfter = roundUSDT(lockedBefore - amount);
+
+    wallet.lockedUSDT = lockedAfter;
+    await wallet.save({ session: params.session });
+
+    const [transaction] = await WalletTransactionModel.create(
+      [
+        {
+          userId: params.userId,
+          type: "WITHDRAWAL_APPROVED",
+          direction: WALLET_TRANSACTION_DIRECTIONS.DEBIT,
+          amount,
+          currency: "USDT",
+          status: WALLET_TRANSACTION_STATUSES.COMPLETED,
+          referenceType: params.reference.type,
+          referenceId: params.reference.id ?? null,
+          balanceBefore: lockedBefore,
+          balanceAfter: lockedAfter,
+          metadata: {
+            balanceType: "lockedUSDT",
+            ...(params.metadata ?? {})
+          }
+        }
+      ],
+      { session: params.session }
+    );
+
+    return { wallet, transaction };
+  }
+
+  static async rejectLockedWithdrawal(params: {
+    userId: Types.ObjectId;
+    amount: number;
+    reference: WalletReference;
+    metadata?: Record<string, unknown>;
+    session?: ClientSession;
+  }) {
+    assertPositiveAmount(params.amount);
+
+    const wallet = await WalletModel.findOne({ userId: params.userId }).session(
+      params.session ?? null
+    );
+
+    if (!wallet) {
+      throw notFound("Wallet not found", "WALLET_NOT_FOUND");
+    }
+
+    const amount = roundUSDT(params.amount);
+
+    if (wallet.lockedUSDT < amount) {
+      throw badRequest("Insufficient locked balance", "INSUFFICIENT_LOCKED_BALANCE");
+    }
+
+    const availableBefore = roundUSDT(wallet.availableUSDT);
+    const availableAfter = roundUSDT(availableBefore + amount);
+    const lockedBefore = roundUSDT(wallet.lockedUSDT);
+    const lockedAfter = roundUSDT(lockedBefore - amount);
+
+    wallet.availableUSDT = availableAfter;
+    wallet.lockedUSDT = lockedAfter;
+    await wallet.save({ session: params.session });
+
+    const [transaction] = await WalletTransactionModel.create(
+      [
+        {
+          userId: params.userId,
+          type: "WITHDRAWAL_REJECTED",
+          direction: WALLET_TRANSACTION_DIRECTIONS.CREDIT,
+          amount,
+          currency: "USDT",
+          status: WALLET_TRANSACTION_STATUSES.COMPLETED,
+          referenceType: params.reference.type,
+          referenceId: params.reference.id ?? null,
+          balanceBefore: availableBefore,
+          balanceAfter: availableAfter,
+          metadata: {
+            balanceType: "availableUSDT",
+            lockedBefore,
+            lockedAfter,
+            ...(params.metadata ?? {})
+          }
+        }
+      ],
+      { session: params.session }
+    );
+
+    return { wallet, transaction };
+  }
+
 }
