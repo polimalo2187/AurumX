@@ -1,14 +1,15 @@
 # AurumX Backend
 
-Backend inicial para AurumX Mining.
+Backend base para AurumX Mining.
 
 ## Stack
 
 - Node.js
 - Express
 - TypeScript
-- MongoDB / Mongoose
-- BSC / BEP20 preparado para integración posterior
+- MongoDB + Mongoose
+- JWT
+- ethers.js preparado para BSC/BEP20
 
 ## Scripts
 
@@ -16,7 +17,6 @@ Backend inicial para AurumX Mining.
 npm install
 npm run dev
 npm run build
-npm start
 npm run seed:machines
 ```
 
@@ -26,9 +26,13 @@ npm run seed:machines
 GET /api/health
 ```
 
-## Primer seed incluido
+## Seed de máquinas
 
-El seed crea los planes oficiales:
+```bash
+npm run seed:machines
+```
+
+Crea o actualiza los planes oficiales:
 
 - Pico Inicial
 - Excavadora
@@ -38,3 +42,20 @@ El seed crea los planes oficiales:
 - Dragalina
 - Coloso
 - Aurora
+
+## Endpoints incluidos en esta versión
+
+```txt
+GET  /api/health
+GET  /api/auth/status
+POST /api/auth/dev/telegram-verify   # Solo desarrollo
+POST /api/auth/dev/issue-token       # Solo desarrollo
+GET  /api/users/me
+GET  /api/users/me/dashboard
+GET  /api/wallet/me
+GET  /api/wallet/transactions
+```
+
+## Nota importante
+
+Los endpoints `/api/auth/dev/*` están bloqueados automáticamente en producción. Sirven solo para probar el backend antes de integrar el bot real de Telegram.
