@@ -2,8 +2,12 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import { ZodError } from "zod";
 import { env, isProduction } from "./config/env";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { authRouter } from "./modules/auth/auth.routes";
+import { userRouter } from "./modules/users/user.routes";
+import { walletRouter } from "./modules/wallet/wallet.routes";
 
 export function createApp() {
   const app = express();
@@ -31,6 +35,24 @@ export function createApp() {
       status: "ok",
       timestamp: new Date().toISOString()
     });
+  });
+
+  app.use("/api/auth", authRouter);
+  app.use("/api/users", userRouter);
+  app.use("/api/wallet", walletRouter);
+
+  app.use((error: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (error instanceof ZodError) {
+      res.status(400).json({
+        success: false,
+        code: "VALIDATION_ERROR",
+        message: "Invalid request payload",
+        details: error.flatten().fieldErrors
+      });
+      return;
+    }
+
+    next(error);
   });
 
   app.use(errorMiddleware);
