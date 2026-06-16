@@ -1,17 +1,17 @@
-import { Decimal128 } from "mongoose";
+import { Types } from "mongoose";
 import { badRequest } from "./errors";
 
-export function toDecimal128(value: number | string): Decimal128 {
+export function toDecimal128(value: number | string): Types.Decimal128 {
   const normalized = typeof value === "number" ? value.toFixed(8) : value;
 
   if (!/^\d+(\.\d+)?$/.test(normalized)) {
     throw badRequest("Invalid monetary amount", "INVALID_AMOUNT");
   }
 
-  return Decimal128.fromString(normalized);
+  return Types.Decimal128.fromString(normalized);
 }
 
-export function decimal128ToNumber(value: Decimal128): number {
+export function decimal128ToNumber(value: Types.Decimal128): number {
   return Number.parseFloat(value.toString());
 }
 
