@@ -13,6 +13,7 @@ import { MachinePlanService } from "../machines/machine-plan.service";
 import { MachineService } from "../machines/machine.service";
 import { BscUsdtService } from "../blockchain/bsc-usdt.service";
 import type { DepositVerificationResult } from "../blockchain/blockchain.service";
+import { ReferralService } from "../referrals/referral.service";
 
 export type DepositOrderDTO = {
   id: string;
@@ -261,6 +262,13 @@ export class DepositService {
           planId: order.machinePlanId,
           sourceType: USER_MACHINE_SOURCE_TYPES.PAID_DEPOSIT,
           depositOrderId: order._id,
+          session
+        });
+
+        await ReferralService.processValidReferral({
+          referredUserId: order.userId,
+          sourceDepositOrderId: order._id,
+          sourceUserMachineId: machine._id,
           session
         });
 
