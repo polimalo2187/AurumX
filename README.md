@@ -118,3 +118,21 @@ POST /api/admin/withdrawals/:id/reject
 - Al solicitar retiro, el saldo pasa de `availableUSDT` a `lockedUSDT`.
 - Al aprobar retiro, el admin debe registrar el hash BEP20.
 - Al rechazar retiro, el saldo bloqueado vuelve a disponible.
+
+## v0.7.0 - Referidos y potencia
+
+Incluye el sistema de referidos válidos de AurumX:
+
+- Un referido solo cuenta cuando activa su primera máquina pagada confirmada.
+- Cada referido válido aporta +2.5% de potencia.
+- La potencia máxima es +30% con 12 referidos válidos.
+- La potencia solo aplica a máquinas pagadas; Pico Inicial y Aurora no reciben potencia.
+- Después de 12 referidos, cada bloque adicional de 10 referidos excedentes permite reclamar una máquina Aurora.
+
+Endpoints agregados:
+
+```txt
+GET  /api/referrals/me
+GET  /api/referrals/rewards/status
+POST /api/referrals/rewards/claim-machine
+```
