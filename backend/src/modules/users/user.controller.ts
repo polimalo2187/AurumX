@@ -2,6 +2,7 @@ import { asyncHandler } from "../../utils/async-handler";
 import type { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { sanitizeUser } from "./user.service";
 import { WalletService } from "../wallet/wallet.service";
+import { MachineService } from "../machines/machine.service";
 import { SYSTEM_RULES } from "../../config/constants";
 
 export class UserController {
@@ -13,7 +14,10 @@ export class UserController {
   });
 
   static getDashboard = asyncHandler(async (req, res) => {
-    const wallet = await WalletService.getWalletOrFail(req.user._id);
+    const [wallet, machineSummary] = await Promise.all([
+      WalletService.getWalletOrFail(req.user._id),
+      MachineService.getMachineSummary(req.user._id)
+    ]);
 
     const validReferralCount = req.user.validReferralCount;
     const totalExtraReferrals = Math.max(
@@ -32,6 +36,7 @@ export class UserController {
           availableUSDT: wallet.availableUSDT,
           lockedUSDT: wallet.lockedUSDT
         },
+        machines: machineSummary,
         referrals: {
           validReferralCount,
           activePowerPercent: req.user.activePowerPercent,
