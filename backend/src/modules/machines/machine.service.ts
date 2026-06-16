@@ -218,6 +218,8 @@ export class MachineService {
     userId: Types.ObjectId;
     planId: Types.ObjectId;
     sourceType: (typeof USER_MACHINE_SOURCE_TYPES)[keyof typeof USER_MACHINE_SOURCE_TYPES];
+    depositOrderId?: Types.ObjectId;
+    referralRewardClaimId?: Types.ObjectId;
     session?: ClientSession;
   }) {
     const plan = await MachinePlanModel.findById(params.planId).session(params.session ?? null);
@@ -235,6 +237,8 @@ export class MachineService {
           userId: params.userId,
           machinePlanId: plan._id,
           sourceType: params.sourceType,
+          depositOrderId: params.depositOrderId ?? null,
+          referralRewardClaimId: params.referralRewardClaimId ?? null,
           machineType: plan.type,
           principalAmount: economics.principalAmount,
           payoutMultiplier: plan.payoutMultiplier,
