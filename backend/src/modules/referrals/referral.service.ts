@@ -17,6 +17,7 @@ import {
 import { MachinePlanModel } from "../../models/MachinePlan.model";
 import { UserMachineModel, USER_MACHINE_SOURCE_TYPES } from "../../models/UserMachine.model";
 import { badRequest, conflict, notFound } from "../../utils/errors";
+import { calculateActivePowerPercent, calculateReferralStats } from "../../utils/referral-stats";
 import { MachineService } from "../machines/machine.service";
 
 export type ReferralStatusDTO = {
@@ -33,39 +34,25 @@ export type ReferralStatusDTO = {
   claimableRewardMachines: number;
 };
 
-function calculatePower(validReferralCount: number): number {
-  return Math.min(
-    validReferralCount * SYSTEM_RULES.POWER_PER_VALID_REFERRAL_PERCENT,
-    SYSTEM_RULES.MAX_POWER_PERCENT
-  );
-}
 
 export class ReferralService {
   static getReferralStats(user: User): ReferralStatusDTO {
-    const validReferralCount = user.validReferralCount;
-    const totalExtraReferrals = Math.max(
-      validReferralCount - SYSTEM_RULES.VALID_REFERRALS_FOR_MAX_POWER,
-      0
-    );
-    const usedExtraReferrals = user.rewardReferralUsedCount;
-    const availableExtraReferrals = Math.max(totalExtraReferrals - usedExtraReferrals, 0);
+    const stats = calculateReferralStats({
+      validReferralCount: user.validReferralCount,
+      rewardReferralUsedCount: user.rewardReferralUsedCount
+    });
 
     return {
       referralCode: user.referralCode,
-      validReferralCount,
-      activePowerPercent: user.activePowerPercent,
-      maxPowerPercent: SYSTEM_RULES.MAX_POWER_PERCENT,
-      referralsNeededForMaxPower: Math.max(
-        SYSTEM_RULES.VALID_REFERRALS_FOR_MAX_POWER - validReferralCount,
-        0
-      ),
-      totalExtraReferrals,
-      usedExtraReferrals,
-      availableExtraReferrals,
-      requiredExtraReferralsPerReward: SYSTEM_RULES.EXTRA_REFERRALS_PER_REWARD_MACHINE,
-      claimableRewardMachines: Math.floor(
-        availableExtraReferrals / SYSTEM_RULES.EXTRA_REFERRALS_PER_REWARD_MACHINE
-      )
+      validReferralCount: stats.validReferralCount,
+      activePowerPercent: stats.activePowerPercent,
+      maxPowerPercent: stats.maxPowerPercent,
+      referralsNeededForMaxPower: stats.referralsNeededForMaxPower,
+      totalExtraReferrals: stats.totalExtraReferrals,
+      usedExtraReferrals: stats.usedExtraReferrals,
+      availableExtraReferrals: stats.availableExtraReferrals,
+      requiredExtraReferralsPerReward: stats.requiredExtraReferralsPerReward,
+      claimableRewardMachines: stats.claimableRewardMachines
     };
   }
 
@@ -159,7 +146,7 @@ export class ReferralService {
       {
         $set: {
           validReferralCount,
-          activePowerPercent: calculatePower(validReferralCount)
+          activePowerPercent: calculateActivePowerPercent(validReferralCount)
         }
       },
       { session }
