@@ -12,6 +12,7 @@ import type { User } from "../../models/User.model";
 import { badRequest, conflict, notFound } from "../../utils/errors";
 import { addHours } from "../../utils/dates";
 import { roundUSDT } from "../../utils/money";
+import { calculateMachineReward, getPowerPercentForMachine } from "../../utils/economics";
 import { MachinePlanService } from "./machine-plan.service";
 
 export type UserMachineDTO = {
@@ -41,17 +42,11 @@ export type UserMachineDTO = {
 
 export class MachineService {
   static calculatePowerPercentForMachine(machineType: string, user: User): number {
-    if (machineType !== MACHINE_TYPES.PAID) {
-      return 0;
-    }
-
-    return Math.min(user.activePowerPercent, SYSTEM_RULES.MAX_POWER_PERCENT);
+    return getPowerPercentForMachine(machineType, user.activePowerPercent);
   }
 
   static calculateEffectiveCycleReward(machine: UserMachine, user: User): number {
-    const powerPercent = MachineService.calculatePowerPercentForMachine(machine.machineType, user);
-
-    return roundUSDT(machine.baseCycleRewardAmount * (1 + powerPercent / 100));
+    return calculateMachineReward(machine, user.activePowerPercent).effectiveRewardAmount;
   }
 
   static toDTO(machine: UserMachine, user: User, plan?: { name?: string; slug?: string }): UserMachineDTO {

@@ -1,5 +1,6 @@
 import { MachinePlanModel } from "../../models/MachinePlan.model";
 import { notFound } from "../../utils/errors";
+import { calculatePlanEconomics } from "../../utils/economics";
 
 export class MachinePlanService {
   static async getActivePlans() {
@@ -23,14 +24,6 @@ export class MachinePlanService {
     payoutMultiplier: number;
     durationCycles: number;
   }) {
-    const principalAmount = plan.type === "PAID" ? plan.priceUSDT : plan.virtualPrincipalUSDT;
-    const maxPayoutAmount = principalAmount * plan.payoutMultiplier;
-    const baseCycleRewardAmount = maxPayoutAmount / plan.durationCycles;
-
-    return {
-      principalAmount,
-      maxPayoutAmount,
-      baseCycleRewardAmount
-    };
+    return calculatePlanEconomics(plan);
   }
 }
