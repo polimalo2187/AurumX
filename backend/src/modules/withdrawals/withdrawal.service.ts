@@ -14,6 +14,7 @@ import { normalizeTxHash } from "../../utils/tx-hash";
 import { WalletService } from "../wallet/wallet.service";
 import { AuditService } from "../audit/audit.service";
 import { AUDIT_ACTIONS, AUDIT_ACTOR_TYPES } from "../../models/AuditLog.model";
+import { RiskService } from "../risk/risk.service";
 
 export class WithdrawalService {
   static async requestWithdrawal(params: {
@@ -102,6 +103,12 @@ export class WithdrawalService {
 
       if (!createdWithdrawalId) {
         throw new Error("Failed to create withdrawal request");
+      }
+
+      try {
+        await RiskService.evaluateWithdrawal(createdWithdrawalId);
+      } catch (error) {
+        console.error("Risk evaluation failed for withdrawal:", error);
       }
 
       return WithdrawalRequestModel.findById(createdWithdrawalId);
