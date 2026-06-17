@@ -1,13 +1,16 @@
 {
   "name": "aurumx-backend",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "AurumX Mining backend",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed:machines": "tsx src/seeds/machine-plans.seed.ts"
+    "seed:machines": "tsx src/seeds/machine-plans.seed.ts",
+    "test": "node --test --import tsx --test-reporter=spec tests/**/*.test.ts",
+    "check:readiness": "tsx scripts/backend-readiness-check.ts",
+    "check": "npm run build && npm test && npm run check:readiness"
   },
   "dependencies": {
     "cors": "^2.8.5",
