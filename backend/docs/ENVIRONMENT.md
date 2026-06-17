@@ -1,0 +1,45 @@
+# Environment Variables
+
+Real secrets must be configured in Railway or the deployment provider. Do not commit `.env`.
+
+## Required in production
+
+```env
+NODE_ENV=production
+PORT=8080
+MONGODB_URI=
+JWT_SECRET=
+JWT_EXPIRES_IN=30d
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=
+TELEGRAM_WEBHOOK_SECRET=
+APP_PUBLIC_URL=
+FRONTEND_URL=
+BSC_RPC_URL=
+BSC_CHAIN_ID=56
+BSC_USDT_CONTRACT_ADDRESS=
+PLATFORM_BSC_DEPOSIT_ADDRESS=
+MIN_BSC_CONFIRMATIONS=12
+INTERNAL_JOB_SECRET=
+CORS_ORIGINS=
+TRUST_PROXY=true
+JOB_LOCK_TTL_SECONDS=120
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=300
+STRICT_RATE_LIMIT_MAX_REQUESTS=30
+TELEGRAM_RATE_LIMIT_MAX_REQUESTS=120
+RISK_SHARED_WITHDRAWAL_WALLET_USER_COUNT=2
+RISK_SMALL_WITHDRAWAL_USDT=2
+RISK_SMALL_WITHDRAWAL_COUNT_7D=3
+RISK_REFERRAL_SPIKE_COUNT_24H=8
+```
+
+## Notes
+
+- `TELEGRAM_BOT_TOKEN` comes from BotFather.
+- `TELEGRAM_BOT_USERNAME` must be the bot username without `@`.
+- `TELEGRAM_WEBHOOK_SECRET` must be long and random.
+- `BSC_USDT_CONTRACT_ADDRESS` must be the official USDT contract on BSC.
+- `PLATFORM_BSC_DEPOSIT_ADDRESS` is the receiving wallet for automatic deposits.
+- `INTERNAL_JOB_SECRET` protects internal job endpoints with header `x-internal-job-secret`.
+- `CORS_ORIGINS` accepts comma-separated origins.
