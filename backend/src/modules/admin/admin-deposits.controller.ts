@@ -7,14 +7,15 @@ import { DepositService } from "../deposits/deposit.service";
 import { AuditService } from "../audit/audit.service";
 import { AUDIT_ACTIONS, AUDIT_ACTOR_TYPES } from "../../models/AuditLog.model";
 
+const objectIdSchema = z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid ObjectId");
+
 const listDepositsQuerySchema = z.object({
   page: z.coerce.number().optional(),
   limit: z.coerce.number().optional(),
   status: z.enum(Object.values(DEPOSIT_ORDER_STATUSES) as [string, ...string[]]).optional(),
-  userId: z.string().optional()
+  userId: objectIdSchema.optional()
 });
-
-const idParamsSchema = z.object({ id: z.string().min(1) });
+const idParamsSchema = z.object({ id: objectIdSchema });
 const rejectBodySchema = z.object({ reason: z.string().min(1).max(1000) });
 
 export class AdminDepositsController {

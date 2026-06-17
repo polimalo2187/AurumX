@@ -4,7 +4,7 @@ import { asyncHandler } from "../../utils/async-handler";
 import { WithdrawalService } from "../withdrawals/withdrawal.service";
 
 const approveWithdrawalSchema = z.object({
-  adminTxHash: z.string().min(1),
+  adminTxHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, "Invalid transaction hash"),
   adminNote: z.string().max(1000).optional()
 });
 
@@ -13,7 +13,7 @@ const rejectWithdrawalSchema = z.object({
 });
 
 const paramsSchema = z.object({
-  id: z.string().min(1)
+  id: z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid ObjectId")
 });
 
 export class AdminWithdrawalsController {

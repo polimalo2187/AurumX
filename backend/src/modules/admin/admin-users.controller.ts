@@ -1,8 +1,7 @@
 import { z } from "zod";
-import mongoose from "mongoose";
 import type { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { asyncHandler } from "../../utils/async-handler";
-import { badRequest, notFound } from "../../utils/errors";
+import { notFound } from "../../utils/errors";
 import { UserModel, USER_STATUSES } from "../../models/User.model";
 import { WalletModel } from "../../models/Wallet.model";
 import { UserMachineModel } from "../../models/UserMachine.model";
@@ -21,7 +20,7 @@ const listUsersQuerySchema = z.object({
   search: z.string().trim().optional()
 });
 
-const idParamsSchema = z.object({ id: z.string().min(1) });
+const idParamsSchema = z.object({ id: z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid ObjectId") });
 const blockBodySchema = z.object({ reason: z.string().min(1).max(1000) });
 
 export class AdminUsersController {
@@ -64,10 +63,6 @@ export class AdminUsersController {
 
   static getUserDetail = asyncHandler(async (req: AuthenticatedRequest, res) => {
     const params = idParamsSchema.parse(req.params);
-
-    if (!mongoose.isValidObjectId(params.id)) {
-      throw badRequest("Invalid user id", "INVALID_USER_ID");
-    }
 
     const user = await UserModel.findById(params.id);
     if (!user) throw notFound("User not found", "USER_NOT_FOUND");
