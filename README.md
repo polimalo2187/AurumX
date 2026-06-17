@@ -126,3 +126,17 @@ POST /api/notifications/run
 ```
 
 Una falla de Telegram no rompe operaciones financieras. La notificación queda como `FAILED` y se reintenta.
+
+## Telegram production variables
+
+For Telegram authentication and notifications, the backend uses these variables:
+
+```env
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=
+TELEGRAM_WEBHOOK_SECRET=
+```
+
+`TELEGRAM_BOT_TOKEN` must be created with BotFather and must be configured in Railway/environment variables, not committed with a real value.
+
+In production, the backend now refuses to boot if Telegram/BSC critical variables are missing.
