@@ -36,6 +36,11 @@ const envSchema = z.object({
   STRICT_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(30),
   TELEGRAM_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(120),
 
+  RISK_SHARED_WITHDRAWAL_WALLET_USER_COUNT: z.coerce.number().default(2),
+  RISK_SMALL_WITHDRAWAL_USDT: z.coerce.number().default(2),
+  RISK_SMALL_WITHDRAWAL_COUNT_7D: z.coerce.number().default(3),
+  RISK_REFERRAL_SPIKE_COUNT_24H: z.coerce.number().default(8),
+
   ADMIN_TELEGRAM_IDS: z.string().optional().default("")
 });
 
