@@ -103,17 +103,17 @@ export class ReferralService {
     sourceDepositOrderId: Types.ObjectId;
     sourceUserMachineId: Types.ObjectId;
     session?: ClientSession;
-  }): Promise<void> {
+  }): Promise<Types.ObjectId | null> {
     const referredUser = await UserModel.findById(params.referredUserId).session(params.session ?? null);
 
     if (!referredUser?.referredByUserId) {
-      return;
+      return null;
     }
 
     const sponsorUserId = referredUser.referredByUserId;
 
     if (sponsorUserId.toString() === referredUser._id.toString()) {
-      return;
+      return null;
     }
 
     const existingEvent = await ReferralPowerEventModel.findOne({
@@ -123,7 +123,7 @@ export class ReferralService {
     }).session(params.session ?? null);
 
     if (existingEvent) {
-      return;
+      return null;
     }
 
     await ReferralPowerEventModel.create(
@@ -142,6 +142,7 @@ export class ReferralService {
     );
 
     await ReferralService.recalculateSponsorPower(sponsorUserId, params.session);
+    return sponsorUserId as Types.ObjectId;
   }
 
   static async recalculateSponsorPower(
