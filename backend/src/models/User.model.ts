@@ -113,6 +113,43 @@ const userSchema = new Schema(
       index: true
     },
 
+
+
+    riskFlagged: {
+      type: Boolean,
+      required: true,
+      default: false,
+      index: true
+    },
+
+    riskLevel: {
+      type: String,
+      required: true,
+      default: "NONE",
+      index: true
+    },
+
+    riskScore: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+      max: 100,
+      index: true
+    },
+
+    riskFlagsCount: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0
+    },
+
+    riskLastEvaluatedAt: {
+      type: Date,
+      default: null
+    },
+
     lastWithdrawalRequestedAt: {
       type: Date,
       default: null
@@ -125,6 +162,7 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ role: 1, status: 1 });
+userSchema.index({ riskFlagged: 1, riskScore: -1 });
 userSchema.index({ referredByUserId: 1, createdAt: -1 });
 
 export type User = InferSchemaType<typeof userSchema> & { _id: Types.ObjectId };
