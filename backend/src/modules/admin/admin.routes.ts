@@ -6,6 +6,7 @@ import { AdminUsersController } from "./admin-users.controller";
 import { AdminDepositsController } from "./admin-deposits.controller";
 import { AdminDashboardController } from "./admin-dashboard.controller";
 import { AdminAuditController } from "./admin-audit.controller";
+import { RiskController } from "../risk/risk.controller";
 
 export const adminRouter = Router();
 
@@ -28,3 +29,10 @@ adminRouter.post("/withdrawals/:id/approve", AdminWithdrawalsController.approveW
 adminRouter.post("/withdrawals/:id/reject", AdminWithdrawalsController.rejectWithdrawal);
 
 adminRouter.get("/audit-logs", AdminAuditController.listAuditLogs);
+
+adminRouter.get("/risk/summary", RiskController.getSummary);
+adminRouter.get("/risk/flags", RiskController.listFlags);
+adminRouter.get("/risk/flags/:id", RiskController.getFlag);
+adminRouter.post("/risk/flags/:id/resolve", RiskController.resolveFlag);
+adminRouter.post("/risk/flags/:id/ignore", RiskController.ignoreFlag);
+adminRouter.post("/risk/users/:id/evaluate", RiskController.evaluateUser);

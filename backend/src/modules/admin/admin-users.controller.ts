@@ -17,6 +17,7 @@ const listUsersQuerySchema = z.object({
   limit: z.coerce.number().optional(),
   status: z.enum([USER_STATUSES.ACTIVE, USER_STATUSES.BLOCKED]).optional(),
   role: z.enum(["USER", "ADMIN"]).optional(),
+  riskFlagged: z.coerce.boolean().optional(),
   search: z.string().trim().optional()
 });
 
@@ -33,6 +34,7 @@ export class AdminUsersController {
     const filter: Record<string, unknown> = {};
     if (query.status) filter.status = query.status;
     if (query.role) filter.role = query.role;
+    if (typeof query.riskFlagged === "boolean") filter.riskFlagged = query.riskFlagged;
     if (query.search) {
       const regex = new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       filter.$or = [

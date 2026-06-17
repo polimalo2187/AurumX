@@ -4,6 +4,7 @@ import { WalletModel } from "../../models/Wallet.model";
 import { UserMachineModel, USER_MACHINE_STATUSES } from "../../models/UserMachine.model";
 import { DepositOrderModel, DEPOSIT_ORDER_STATUSES } from "../../models/DepositOrder.model";
 import { WithdrawalRequestModel, WITHDRAWAL_STATUSES } from "../../models/WithdrawalRequest.model";
+import { RiskFlagModel, RISK_FLAG_STATUSES, RISK_FLAG_SEVERITIES } from "../../models/RiskFlag.model";
 
 export class AdminDashboardController {
   static getDashboard = asyncHandler(async (_req, res) => {
@@ -21,7 +22,10 @@ export class AdminDashboardController {
       walletsAgg,
       depositsAgg,
       withdrawalsAgg,
-      machinesAgg
+      machinesAgg,
+      openRiskFlags,
+      highRiskFlags,
+      riskFlaggedUsers
     ] = await Promise.all([
       UserModel.countDocuments(),
       UserModel.countDocuments({ status: USER_STATUSES.ACTIVE }),
@@ -46,7 +50,10 @@ export class AdminDashboardController {
       ]),
       UserMachineModel.aggregate([
         { $group: { _id: null, paidAmount: { $sum: "$paidAmount" }, maxPayoutAmount: { $sum: "$maxPayoutAmount" } } }
-      ])
+      ]),
+      RiskFlagModel.countDocuments({ status: RISK_FLAG_STATUSES.OPEN }),
+      RiskFlagModel.countDocuments({ status: RISK_FLAG_STATUSES.OPEN, severity: { $in: [RISK_FLAG_SEVERITIES.HIGH, RISK_FLAG_SEVERITIES.CRITICAL] } }),
+      UserModel.countDocuments({ riskFlagged: true })
     ]);
 
     res.json({
@@ -73,6 +80,11 @@ export class AdminDashboardController {
         wallets: {
           availableUSDT: walletsAgg[0]?.availableUSDT ?? 0,
           lockedUSDT: walletsAgg[0]?.lockedUSDT ?? 0
+        },
+        risk: {
+          openFlags: openRiskFlags,
+          highRiskFlags,
+          flaggedUsers: riskFlaggedUsers
         }
       }
     });
