@@ -12,6 +12,8 @@ import { assertPositiveAmount, roundUSDT } from "../../utils/money";
 import { normalizeBscAddress } from "../../utils/bsc-address";
 import { normalizeTxHash } from "../../utils/tx-hash";
 import { WalletService } from "../wallet/wallet.service";
+import { AuditService } from "../audit/audit.service";
+import { AUDIT_ACTIONS, AUDIT_ACTOR_TYPES } from "../../models/AuditLog.model";
 
 export class WithdrawalService {
   static async requestWithdrawal(params: {
@@ -201,6 +203,16 @@ export class WithdrawalService {
         withdrawal.adminNote = params.adminNote ?? "";
         withdrawal.reviewedAt = new Date();
         await withdrawal.save({ session });
+
+        await AuditService.log({
+          actor: { type: AUDIT_ACTOR_TYPES.ADMIN, userId: params.adminId },
+          action: AUDIT_ACTIONS.WITHDRAWAL_APPROVED,
+          targetType: "WithdrawalRequest",
+          targetId: withdrawal._id,
+          after: { status: withdrawal.status, adminTxHash },
+          metadata: { amount: withdrawal.amount, userId: withdrawal.userId.toString() },
+          session
+        });
       });
 
       return WithdrawalRequestModel.findById(params.withdrawalId);
@@ -253,6 +265,16 @@ export class WithdrawalService {
         withdrawal.adminNote = note;
         withdrawal.reviewedAt = new Date();
         await withdrawal.save({ session });
+
+        await AuditService.log({
+          actor: { type: AUDIT_ACTOR_TYPES.ADMIN, userId: params.adminId },
+          action: AUDIT_ACTIONS.WITHDRAWAL_REJECTED,
+          targetType: "WithdrawalRequest",
+          targetId: withdrawal._id,
+          after: { status: withdrawal.status, adminNote: note },
+          metadata: { amount: withdrawal.amount, userId: withdrawal.userId.toString() },
+          session
+        });
       });
 
       return WithdrawalRequestModel.findById(params.withdrawalId);
