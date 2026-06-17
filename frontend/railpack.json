@@ -8,13 +8,14 @@
     "install": {
       "inputs": [
         { "step": "packages:mise" },
-        { "local": true, "include": ["package.json", "package-lock.json", ".npmrc", ".nvmrc", ".node-version"] }
+        { "local": true, "include": ["."] }
       ],
       "commands": [
         {
-          "cmd": "pwd && ls -la && npm install --include=dev --no-audit --no-fund",
+          "cmd": "npm install --include=dev --no-audit --no-fund",
           "customName": "Install dependencies with dev tools"
-        }
+        },
+        { "path": "node_modules/.bin" }
       ]
     },
     "build": {
@@ -27,8 +28,7 @@
           "cmd": "npm run build",
           "customName": "Build AurumX frontend"
         }
-      ],
-      "deployOutputs": ["."]
+      ]
     }
   },
   "deploy": {
