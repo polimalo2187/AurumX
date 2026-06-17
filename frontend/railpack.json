@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "20"
+  },
+  "steps": {
+    "install": {
+      "commands": [
+        {
+          "cmd": "npm install --include=dev --no-audit --no-fund",
+          "customName": "Install dependencies with dev tools"
+        }
+      ]
+    },
+    "build": {
+      "inputs": [
+        {
+          "step": "install"
+        }
+      ],
+      "commands": [
+        {
+          "cmd": "npm run build",
+          "customName": "Build AurumX frontend"
+        }
+      ]
+    }
+  }
+}
