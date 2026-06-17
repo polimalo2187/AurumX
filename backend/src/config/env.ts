@@ -6,6 +6,7 @@ dotenv.config();
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(8080),
+  TRUST_PROXY: z.coerce.boolean().default(false),
 
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
 
@@ -18,6 +19,7 @@ const envSchema = z.object({
 
   APP_PUBLIC_URL: z.string().url().optional(),
   FRONTEND_URL: z.string().url().optional(),
+  CORS_ORIGINS: z.string().optional().default(""),
 
   BSC_RPC_URL: z.string().optional().default(""),
   BSC_CHAIN_ID: z.coerce.number().default(56),
@@ -27,6 +29,12 @@ const envSchema = z.object({
   MIN_BSC_CONFIRMATIONS: z.coerce.number().default(12),
 
   INTERNAL_JOB_SECRET: z.string().optional().default(""),
+  JOB_LOCK_TTL_SECONDS: z.coerce.number().default(120),
+
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60_000),
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(300),
+  STRICT_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(30),
+  TELEGRAM_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(120),
 
   ADMIN_TELEGRAM_IDS: z.string().optional().default("")
 });
@@ -71,3 +79,9 @@ export const isProduction = env.NODE_ENV === "production";
 export const adminTelegramIds = env.ADMIN_TELEGRAM_IDS
   ? env.ADMIN_TELEGRAM_IDS.split(",").map((id) => id.trim()).filter(Boolean)
   : [];
+
+export const corsOrigins = env.CORS_ORIGINS
+  ? env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+  : env.FRONTEND_URL
+    ? [env.FRONTEND_URL]
+    : [];
