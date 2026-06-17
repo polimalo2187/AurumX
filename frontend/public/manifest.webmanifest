@@ -1,1 +1,17 @@
-
+{
+  "name": "AurumX Mining",
+  "short_name": "AurumX",
+  "description": "Plataforma industrial de máquinas de oro",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "/aurumx-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
