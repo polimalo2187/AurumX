@@ -1,21 +1,20 @@
 import cron from "node-cron";
+import { env } from "../config/env";
+import { JobLockService } from "../modules/jobs/job-lock.service";
 import { NotificationService } from "../modules/notifications/notification.service";
-
-let isRunning = false;
 
 export function startNotificationCron(): void {
   cron.schedule("*/2 * * * *", async () => {
-    if (isRunning) return;
-    isRunning = true;
-
     try {
-      await NotificationService.sendPending(50);
+      await JobLockService.withLock(
+        "notification-cron",
+        env.JOB_LOCK_TTL_SECONDS,
+        async () => NotificationService.sendPending(50)
+      );
     } catch (error) {
       console.error("Notification cron failed:", error);
-    } finally {
-      isRunning = false;
     }
   });
 
-  console.log("Notification cron scheduled every 2 minutes");
+  console.log("Notification cron scheduled with persistent lock");
 }
