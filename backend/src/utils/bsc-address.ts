@@ -1,6 +1,10 @@
 import { getAddress, isAddress } from "ethers";
 import { badRequest } from "./errors";
 
+export function isValidBscAddress(address: string): boolean {
+  return isAddress(address.trim());
+}
+
 export function normalizeBscAddress(address: string): string {
   const trimmed = address.trim();
 
