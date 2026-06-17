@@ -14,6 +14,7 @@ import { MachineService } from "../machines/machine.service";
 import { BscUsdtService } from "../blockchain/bsc-usdt.service";
 import type { DepositVerificationResult } from "../blockchain/blockchain.service";
 import { ReferralService } from "../referrals/referral.service";
+import { RiskService } from "../risk/risk.service";
 
 export type DepositOrderDTO = {
   id: string;
@@ -239,6 +240,7 @@ export class DepositService {
     try {
       let dtoOrder: DepositOrderDTO | null = null;
       let dtoMachine: Awaited<ReturnType<typeof MachineService.toDTO>> | null = null;
+      let sponsorUserIdForRisk: Types.ObjectId | null = null;
 
       await session.withTransaction(async () => {
         const order = await DepositOrderModel.findOne({
@@ -265,7 +267,7 @@ export class DepositService {
           session
         });
 
-        await ReferralService.processValidReferral({
+        sponsorUserIdForRisk = await ReferralService.processValidReferral({
           referredUserId: order.userId,
           sourceDepositOrderId: order._id,
           sourceUserMachineId: machine._id,
@@ -285,6 +287,14 @@ export class DepositService {
 
       if (!dtoOrder || !dtoMachine) {
         throw new Error("Deposit confirmation transaction failed");
+      }
+
+      if (sponsorUserIdForRisk) {
+        try {
+          await RiskService.evaluateReferralRisk(sponsorUserIdForRisk);
+        } catch (error) {
+          console.error("Risk evaluation failed for referral:", error);
+        }
       }
 
       return { order: dtoOrder, machine: dtoMachine };
