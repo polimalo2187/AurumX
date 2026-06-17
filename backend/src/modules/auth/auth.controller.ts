@@ -5,6 +5,7 @@ import { asyncHandler } from "../../utils/async-handler";
 import { forbidden } from "../../utils/errors";
 import { AuthService } from "./auth.service";
 import { UserService } from "../users/user.service";
+import { TelegramService } from "../telegram/telegram.service";
 
 const devTelegramVerifySchema = z.object({
   telegramId: z.string().min(1),
@@ -19,7 +20,30 @@ const issueTokenSchema = z.object({
   userId: z.string().min(1)
 });
 
+const startTelegramLoginSchema = z.object({
+  referralCode: z.string().optional()
+});
+
+const completeTelegramLoginSchema = z.object({
+  verificationToken: z.string().min(32)
+});
+
 export class AuthController {
+  static startTelegramLogin = asyncHandler(async (req, res) => {
+    const body = startTelegramLoginSchema.parse(req.body);
+    const result = await TelegramService.createLoginSession(body.referralCode);
+
+    res.status(201).json({ success: true, data: result });
+  });
+
+  static completeTelegramLogin = asyncHandler(async (req, res) => {
+    const body = completeTelegramLoginSchema.parse(req.body);
+    const userId = await TelegramService.completeLoginSession(body.verificationToken);
+    const result = await AuthService.issueTokenForVerifiedUser(userId);
+
+    res.json({ success: true, data: result });
+  });
+
   static devTelegramVerify = asyncHandler(async (req, res) => {
     if (env.NODE_ENV === "production") {
       throw forbidden("Dev auth endpoint is disabled in production", "DEV_AUTH_DISABLED");
