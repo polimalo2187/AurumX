@@ -2,12 +2,18 @@ import { z } from "zod";
 import { asyncHandler } from "../../utils/async-handler";
 import { DepositService } from "./deposit.service";
 
+const objectIdSchema = z.string().regex(/^[a-fA-F0-9]{24}$/, "Invalid ObjectId");
+
 const createDepositOrderSchema = z.object({
-  machinePlanId: z.string().min(1)
+  machinePlanId: objectIdSchema
+});
+
+const depositParamsSchema = z.object({
+  id: objectIdSchema
 });
 
 const submitHashSchema = z.object({
-  txHash: z.string().min(1)
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, "Invalid transaction hash")
 });
 
 export class DepositController {
@@ -24,7 +30,8 @@ export class DepositController {
 
   static submitHash = asyncHandler(async (req, res) => {
     const body = submitHashSchema.parse(req.body);
-    const result = await DepositService.submitHash(req.user, req.params.id, body.txHash);
+    const params = depositParamsSchema.parse(req.params);
+    const result = await DepositService.submitHash(req.user, params.id, body.txHash);
 
     res.json({
       success: true,
