@@ -17,6 +17,7 @@ import {
 import { addHours } from "../../utils/dates";
 import { notFound } from "../../utils/errors";
 import { roundUSDT } from "../../utils/money";
+import { calculateMachineReward } from "../../utils/economics";
 import { WalletService } from "../wallet/wallet.service";
 
 export type RewardCalculation = {
@@ -49,28 +50,7 @@ function getWalletTransactionType(machineType: string) {
 
 export class RewardService {
   static calculateReward(machine: UserMachine, activePowerPercent: number): RewardCalculation {
-    const powerPercentApplied =
-      machine.machineType === MACHINE_TYPES.PAID
-        ? Math.min(activePowerPercent, SYSTEM_RULES.MAX_POWER_PERCENT)
-        : 0;
-
-    const baseRewardAmount = roundUSDT(machine.baseCycleRewardAmount);
-    const effectiveRewardAmount = roundUSDT(
-      baseRewardAmount * (1 + powerPercentApplied / 100)
-    );
-    const remainingAmount = Math.max(
-      roundUSDT(machine.maxPayoutAmount - machine.paidAmount),
-      0
-    );
-    const rewardToPay = roundUSDT(Math.min(effectiveRewardAmount, remainingAmount));
-
-    return {
-      powerPercentApplied,
-      baseRewardAmount,
-      effectiveRewardAmount,
-      remainingAmount,
-      rewardToPay
-    };
+    return calculateMachineReward(machine, activePowerPercent);
   }
 
   static async runDueRewards(limit = 500): Promise<{
