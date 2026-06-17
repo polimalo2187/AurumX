@@ -4,9 +4,9 @@ import { asyncHandler } from "../../utils/async-handler";
 import { WithdrawalService } from "./withdrawal.service";
 
 const requestWithdrawalSchema = z.object({
-  amount: z.coerce.number().positive(),
+  amount: z.coerce.number().min(1),
   network: z.literal("BEP20").or(z.literal("BSC")).optional(),
-  destinationAddress: z.string().min(1)
+  destinationAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid BSC address")
 });
 
 export class WithdrawalController {
