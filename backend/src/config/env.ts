@@ -39,6 +39,31 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+const productionRequiredEnvKeys = [
+  "TELEGRAM_BOT_TOKEN",
+  "TELEGRAM_BOT_USERNAME",
+  "TELEGRAM_WEBHOOK_SECRET",
+  "APP_PUBLIC_URL",
+  "FRONTEND_URL",
+  "BSC_RPC_URL",
+  "BSC_USDT_CONTRACT_ADDRESS",
+  "PLATFORM_BSC_DEPOSIT_ADDRESS",
+  "INTERNAL_JOB_SECRET"
+] as const;
+
+if (parsed.data.NODE_ENV === "production") {
+  const missingKeys = productionRequiredEnvKeys.filter((key) => {
+    const value = parsed.data[key];
+    return typeof value !== "string" || value.trim().length === 0;
+  });
+
+  if (missingKeys.length > 0) {
+    console.error("Missing required production environment variables:");
+    console.error(missingKeys.join(", "));
+    process.exit(1);
+  }
+}
+
 export const env = parsed.data;
 
 export const isProduction = env.NODE_ENV === "production";
