@@ -14,6 +14,8 @@ import { rewardRouter } from "./modules/rewards/reward.routes";
 import { withdrawalRouter } from "./modules/withdrawals/withdrawal.routes";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { referralRouter } from "./modules/referrals/referral.routes";
+import { telegramRouter } from "./modules/telegram/telegram.routes";
+import { notificationRouter } from "./modules/notifications/notification.routes";
 
 export function createApp() {
   const app = express();
@@ -51,6 +53,8 @@ export function createApp() {
   app.use("/api/rewards", rewardRouter);
   app.use("/api/withdrawals", withdrawalRouter);
   app.use("/api/referrals", referralRouter);
+  app.use("/api/telegram", telegramRouter);
+  app.use("/api/notifications", notificationRouter);
   app.use("/api/admin", adminRouter);
 
   app.use((error: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {

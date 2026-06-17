@@ -3,6 +3,7 @@ import { connectDatabase } from "./config/db";
 import { env } from "./config/env";
 import { startDepositVerificationCron } from "./jobs/deposit-verification-cron";
 import { startRewardCron } from "./jobs/reward-cron";
+import { startNotificationCron } from "./jobs/notification-cron";
 
 async function bootstrap(): Promise<void> {
   await connectDatabase();
@@ -14,6 +15,7 @@ async function bootstrap(): Promise<void> {
   }
 
   startRewardCron();
+  startNotificationCron();
 
   app.listen(env.PORT, () => {
     console.log(`AurumX API listening on port ${env.PORT}`);
