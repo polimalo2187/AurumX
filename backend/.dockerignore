@@ -5,6 +5,8 @@ dist
 npm-debug.log*
 .DS_Store
 coverage
+.git
+.gitignore
 tests
 docs
 scripts
