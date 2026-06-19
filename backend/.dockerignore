@@ -3,11 +3,8 @@ dist
 .env
 .env.*
 npm-debug.log*
-.DS_Store
-coverage
+Dockerfile*
 .git
 .gitignore
-tests
-docs
-scripts
-README.md
+coverage
+*.local

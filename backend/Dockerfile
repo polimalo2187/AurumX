@@ -1,20 +1,24 @@
-FROM node:20-alpine AS build
+# AurumX Backend - Railway Docker build
+# Fix: avoid Railway/Alpine npm install crashes by using Debian-based Node 22.16.0.
+
+FROM node:22.16.0-bookworm-slim AS build
 
 WORKDIR /app
 
-# Railway's builder was using npm 10.8.2, which can crash with:
-# "Exit handler never called!" during dependency installation.
-# Pin npm to a stable version before installing project dependencies.
-ENV NODE_ENV=development
-ENV NPM_CONFIG_FUND=false
-ENV NPM_CONFIG_AUDIT=false
-ENV NPM_CONFIG_OMIT=
-
-RUN npm install -g npm@10.9.2
+ENV NODE_ENV=development \
+    NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_FUND=false \
+    NPM_CONFIG_UPDATE_NOTIFIER=false \
+    NPM_CONFIG_PROGRESS=false \
+    NPM_CONFIG_LOGLEVEL=warn
 
 COPY package.json package-lock.json ./
 
-RUN npm ci --include=dev --no-audit --no-fund \
+# Install devDependencies because TypeScript is required for npm run build.
+# Do not run npm config set production=false; newer npm rejects that option.
+RUN node --version \
+  && npm --version \
+  && npm ci --include=dev --no-audit --no-fund --progress=false \
   && test -x ./node_modules/.bin/tsc
 
 COPY tsconfig.json ./
@@ -22,14 +26,13 @@ COPY src ./src
 
 RUN npm run build
 
-RUN npm prune --omit=dev --no-audit --no-fund
-
-FROM node:20-alpine AS runtime
+FROM node:22.16.0-bookworm-slim AS runtime
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV HOST=0.0.0.0
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=8080
 
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/package-lock.json ./package-lock.json
@@ -38,4 +41,4 @@ COPY --from=build /app/dist ./dist
 
 EXPOSE 8080
 
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]
