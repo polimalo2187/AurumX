@@ -2,6 +2,7 @@ type RuntimeAurumXEnv = {
   VITE_API_BASE_URL?: string;
   VITE_APP_NAME?: string;
   VITE_TELEGRAM_BOT_USERNAME?: string;
+  VITE_FRONTEND_URL?: string;
 };
 
 declare global {
@@ -23,6 +24,14 @@ function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
+function defaultFrontendUrl(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin.replace(/\/+$/, "");
+  }
+
+  return "https://aurumx-production-cdd0.up.railway.app";
+}
+
 function defaultApiBaseUrl(): string {
   if (typeof window !== "undefined" && window.location.hostname.endsWith(".up.railway.app")) {
     return "https://aurumx-production.up.railway.app/api";
@@ -39,8 +48,15 @@ const apiBaseUrl = stripTrailingSlash(
     defaultApiBaseUrl()
 );
 
+const frontendUrl = stripTrailingSlash(
+  cleanValue(runtimeEnv.VITE_FRONTEND_URL) ||
+    cleanValue(import.meta.env.VITE_FRONTEND_URL) ||
+    defaultFrontendUrl()
+);
+
 export const env = {
   apiBaseUrl,
+  frontendUrl,
   appName: cleanValue(runtimeEnv.VITE_APP_NAME) || cleanValue(import.meta.env.VITE_APP_NAME) || "AurumX",
   telegramBotUsername:
     cleanValue(runtimeEnv.VITE_TELEGRAM_BOT_USERNAME) || cleanValue(import.meta.env.VITE_TELEGRAM_BOT_USERNAME) || ""
