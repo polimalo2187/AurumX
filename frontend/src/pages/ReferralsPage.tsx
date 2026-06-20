@@ -117,7 +117,7 @@ export function ReferralsPage() {
 
       <Card>
         <h2 className="flex items-center gap-2 text-xl font-black"><LinkIcon className="text-aurum-gold" /> Tu enlace de invitación</h2>
-        <p className="mt-2 text-sm text-zinc-400">Comparte este enlace. El referido cuenta como válido cuando verifica Telegram y activa una máquina de pago.</p>
+        <p className="mt-2 text-sm text-zinc-400">Comparte tu enlace personal. Tus referidos válidos aumentan tu potencia y te acercan a nuevas recompensas.</p>
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
           <div className="rounded-2xl bg-black/40 p-4 font-mono text-sm break-all">{link || "Enlace no disponible todavía"}</div>
           <Button variant="secondary" onClick={() => copy(link)} disabled={!link}><Copy size={16} className="mr-2" /> {copied ? "Copiado" : "Copiar enlace"}</Button>

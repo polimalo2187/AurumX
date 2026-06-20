@@ -133,7 +133,7 @@ export function DashboardPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-xl font-black">Enlace de referido</h2>
-            <p className="mt-2 text-sm text-zinc-400">Invita usuarios y aumenta la potencia de tus máquinas. El enlace se construye automáticamente con el dominio real del frontend.</p>
+            <p className="mt-2 text-sm text-zinc-400">Invita usuarios, aumenta tu potencia de producción y desbloquea recompensas especiales.</p>
           </div>
           <Badge tone={referralLink ? "green" : "gold"}>{referralLink ? "Listo para compartir" : "Generando"}</Badge>
         </div>
