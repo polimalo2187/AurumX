@@ -62,8 +62,7 @@ const depositOrderSchema = new Schema(
       type: String,
       trim: true,
       lowercase: true,
-      default: null,
-      index: true
+      default: null
     },
 
     status: {
