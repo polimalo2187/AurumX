@@ -81,10 +81,23 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
-    ...options,
-    headers
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${env.apiBaseUrl}${path}`, {
+      ...options,
+      headers,
+      mode: "cors",
+      credentials: "omit"
+    });
+  } catch (error) {
+    throw new ApiError(0, {
+      success: false,
+      code: "NETWORK_ERROR",
+      message: `No se pudo conectar con el backend (${env.apiBaseUrl}). Revisa VITE_API_BASE_URL o CORS_ORIGINS.`,
+      details: error instanceof Error ? error.message : error
+    });
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const payload = contentType.includes("application/json")
