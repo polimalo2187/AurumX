@@ -5,7 +5,39 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatUSDT } from "@/utils/formatMoney";
-import { getMachineImagePath } from "@/utils/machineImages";
+
+
+const MACHINE_IMAGE_MAP: Record<string, string> = {
+  "pico-inicial": "/machines/pico-inicial.png",
+  excavadora: "/machines/excavadora.png",
+  perforadora: "/machines/perforadora.png",
+  trituradora: "/machines/trituradora.png",
+  "planta-elite": "/machines/planta-elite.png",
+  dragalina: "/machines/dragalina.png",
+  coloso: "/machines/coloso.png",
+  aurora: "/machines/aurora.png"
+};
+
+function normalizeMachineSlug(value?: string) {
+  if (!value) return "";
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getMachineImagePath(slug?: string, name?: string) {
+  const normalizedSlug = normalizeMachineSlug(slug);
+  if (normalizedSlug && MACHINE_IMAGE_MAP[normalizedSlug]) return MACHINE_IMAGE_MAP[normalizedSlug];
+
+  const normalizedName = normalizeMachineSlug(name);
+  if (normalizedName && MACHINE_IMAGE_MAP[normalizedName]) return MACHINE_IMAGE_MAP[normalizedName];
+
+  return "/machines/excavadora.png";
+}
 
 export function MachinePlanCard({ plan, onClaimFree }: { plan: MachinePlanDTO; onClaimFree?: () => void }) {
   const priceLabel = plan.type === "PAID" ? formatUSDT(plan.priceUSDT) : "0 USDT";
