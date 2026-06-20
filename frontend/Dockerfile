@@ -1,4 +1,4 @@
-FROM node:22.16.0-bookworm-slim
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
@@ -23,6 +23,6 @@ RUN pnpm run build
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
-EXPOSE 4173
+EXPOSE 8080
 
-CMD ["sh", "-c", "pnpm run preview -- --host 0.0.0.0 --port ${PORT:-4173}"]
+CMD ["sh", "-c", "pnpm exec vite preview --host 0.0.0.0 --port ${PORT:-8080}"]
