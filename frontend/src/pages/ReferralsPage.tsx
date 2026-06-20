@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { buildReferralLink } from "@/utils/referralLink";
 
 export function ReferralsPage() {
   const queryClient = useQueryClient();
@@ -27,8 +28,8 @@ export function ReferralsPage() {
     }
   });
 
-  const link = referrals.data?.referralLink || "";
   const code = referrals.data?.referralCode || user?.referralCode || "";
+  const link = buildReferralLink(code, referrals.data?.referralLink);
   const validReferrals = referrals.data?.validReferralCount || reward.data?.validReferralCount || user?.validReferralCount || 0;
   const activePower = referrals.data?.activePowerPercent || reward.data?.activePowerPercent || user?.activePowerPercent || 0;
   const maxPower = referrals.data?.maxPowerPercent || 30;

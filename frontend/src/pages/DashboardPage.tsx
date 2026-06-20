@@ -1,24 +1,29 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Factory, Gauge, Gem, Landmark, Megaphone, WalletCards, Zap } from "lucide-react";
+import { ArrowRight, Copy, Factory, Gauge, Gem, Landmark, Megaphone, WalletCards, Zap } from "lucide-react";
 import { usersApi } from "@/api/users.api";
 import { machinesApi } from "@/api/machines.api";
 import { walletApi } from "@/api/wallet.api";
 import { withdrawalsApi } from "@/api/withdrawals.api";
+import { referralsApi } from "@/api/referrals.api";
 import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useCountdown } from "@/hooks/useCountdown";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { formatUSDT } from "@/utils/formatMoney";
+import { buildReferralLink } from "@/utils/referralLink";
 
 export function DashboardPage() {
   const dashboard = useQuery({ queryKey: ["dashboard"], queryFn: usersApi.dashboard });
   const machines = useQuery({ queryKey: ["my-machines"], queryFn: machinesApi.myMachines });
   const transactions = useQuery({ queryKey: ["wallet-transactions"], queryFn: walletApi.transactions });
   const withdrawals = useQuery({ queryKey: ["withdrawals"], queryFn: withdrawalsApi.myWithdrawals });
+  const referrals = useQuery({ queryKey: ["referrals"], queryFn: referralsApi.me });
+  const { copied, copy } = useCopyToClipboard();
 
   const data = dashboard.data;
   const activeMachines = (machines.data || []).filter((machine) => machine.status === "ACTIVE");
@@ -41,6 +46,8 @@ export function DashboardPage() {
   }, [transactions.data?.items]);
 
   const pendingWithdrawal = (withdrawals.data?.items || []).find((item) => item.status === "PENDING");
+  const referralCode = referrals.data?.referralCode || "";
+  const referralLink = buildReferralLink(referralCode, referrals.data?.referralLink);
 
   if (dashboard.isLoading) return <div className="screen-center">Cargando dashboard...</div>;
 
@@ -120,6 +127,24 @@ export function DashboardPage() {
           <Link to="/withdrawals"><Button className="mt-5 w-full">Gestionar retiros</Button></Link>
         </Card>
       </div>
+
+
+      <Card className="border-aurum-gold/20">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-black">Enlace de referido</h2>
+            <p className="mt-2 text-sm text-zinc-400">Invita usuarios y aumenta la potencia de tus máquinas. El enlace se construye automáticamente con el dominio real del frontend.</p>
+          </div>
+          <Badge tone={referralLink ? "green" : "gold"}>{referralLink ? "Listo para compartir" : "Generando"}</Badge>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto]">
+          <div className="rounded-2xl bg-black/40 p-4 font-mono text-sm break-all text-zinc-200">{referralLink || "Enlace no disponible todavía"}</div>
+          <Button variant="secondary" onClick={() => copy(referralLink)} disabled={!referralLink}>
+            <Copy size={16} className="mr-2" /> {copied ? "Copiado" : "Copiar enlace"}
+          </Button>
+        </div>
+        <Link to="/referrals" className="mt-3 inline-flex text-sm font-bold text-aurum-gold">Ver panel de referidos</Link>
+      </Card>
 
       <Card>
         <div className="flex items-center justify-between gap-4">
