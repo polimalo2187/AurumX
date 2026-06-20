@@ -9,11 +9,11 @@ export const authApi = {
       body: JSON.stringify({ referralCode })
     });
   },
-  completeTelegramLogin(sessionToken: string) {
+  completeTelegramLogin(verificationToken: string) {
     return apiRequest<AuthResponse>("/auth/telegram/complete", {
       method: "POST",
       auth: false,
-      body: JSON.stringify({ sessionToken })
+      body: JSON.stringify({ verificationToken })
     });
   }
 };

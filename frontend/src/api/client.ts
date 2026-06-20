@@ -24,6 +24,14 @@ type RequestOptions = RequestInit & {
   auth?: boolean;
 };
 
+type ApiEnvelope<T> = {
+  success: boolean;
+  data?: T;
+  message?: string;
+  code?: string;
+  details?: unknown;
+};
+
 const TOKEN_KEY = "aurumx_token";
 
 export const tokenStorage = {
@@ -38,9 +46,35 @@ export const tokenStorage = {
   }
 };
 
+function isApiEnvelope<T>(payload: unknown): payload is ApiEnvelope<T> {
+  return Boolean(payload && typeof payload === "object" && "success" in payload);
+}
+
+function unwrapPayload<T>(payload: unknown): T {
+  if (isApiEnvelope<T>(payload)) {
+    if (payload.success === false) {
+      throw new ApiError(400, {
+        success: false,
+        code: payload.code,
+        message: payload.message || "Error de API",
+        details: payload.details
+      });
+    }
+
+    if ("data" in payload) {
+      return payload.data as T;
+    }
+  }
+
+  return payload as T;
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   if (options.auth !== false) {
     const token = tokenStorage.get();
@@ -61,5 +95,5 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError(response.status, payload || { message: response.statusText });
   }
 
-  return payload as T;
+  return unwrapPayload<T>(payload);
 }

@@ -76,7 +76,8 @@ export type UserMachineDTO = {
 
 export type TelegramStartResponse = {
   botUrl: string;
-  sessionToken: string;
+  verificationToken: string;
+  expiresInMinutes: number;
 };
 
 export type AuthResponse = {
