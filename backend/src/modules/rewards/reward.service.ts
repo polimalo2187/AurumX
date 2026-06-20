@@ -7,6 +7,7 @@ import {
 import { UserModel } from "../../models/User.model";
 import {
   UserMachineModel,
+  USER_MACHINE_SOURCE_TYPES,
   USER_MACHINE_STATUSES,
   type UserMachine
 } from "../../models/UserMachine.model";
@@ -119,6 +120,30 @@ export class RewardService {
             skippedReason: "REWARD_NOT_DUE"
           };
           return;
+        }
+
+        if (machine.sourceType === USER_MACHINE_SOURCE_TYPES.FREE_CLAIM) {
+          const canonicalFreeMachine = await UserMachineModel.findOne({
+            userId: machine.userId,
+            sourceType: USER_MACHINE_SOURCE_TYPES.FREE_CLAIM,
+            status: { $ne: USER_MACHINE_STATUSES.CANCELLED }
+          })
+            .sort({ activatedAt: 1, createdAt: 1 })
+            .session(session);
+
+          if (canonicalFreeMachine && !canonicalFreeMachine._id.equals(machine._id)) {
+            machine.status = USER_MACHINE_STATUSES.CANCELLED;
+            machine.completedAt = new Date();
+            machine.nextRewardAt = null;
+            await machine.save({ session });
+
+            result = {
+              processed: false,
+              machineId: machine._id.toString(),
+              skippedReason: "DUPLICATE_FREE_MACHINE_CANCELLED"
+            };
+            return;
+          }
         }
 
         const cycleNumber = machine.paidCycles + 1;
