@@ -27,6 +27,10 @@ function getErrorMessage(error: unknown): string {
       return "La sesión local no es válida. Crea una nueva verificación.";
     }
 
+    if (error.code === "NETWORK_ERROR") {
+      return error.message;
+    }
+
     return `${error.message}${error.code ? ` (${error.code})` : ""}`;
   }
 
