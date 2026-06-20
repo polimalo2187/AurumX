@@ -1,26 +1,39 @@
 import { apiRequest } from "@/api/client";
 
+export type WithdrawalStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+
 export type WithdrawalDTO = {
-  id: string;
+  id?: string;
+  _id?: string;
   amount: number;
-  currency: "USDT";
-  network: "BEP20";
+  currency: "USDT" | string;
+  network: "BEP20" | "BSC" | string;
+  tokenStandard?: "BEP20" | string;
   destinationAddress: string;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
-  adminTxHash?: string;
+  status: WithdrawalStatus;
+  adminTxHash?: string | null;
   adminNote?: string;
   requestedAt: string;
-  reviewedAt?: string;
+  reviewedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type WithdrawalsPageDTO = {
+  items: WithdrawalDTO[];
+  page: number;
+  total: number;
+  totalPages: number;
 };
 
 export const withdrawalsApi = {
   request(amount: number, destinationAddress: string) {
-    return apiRequest<{ message: string; withdrawal: WithdrawalDTO }>("/withdrawals", {
+    return apiRequest<WithdrawalDTO>("/withdrawals", {
       method: "POST",
       body: JSON.stringify({ amount, network: "BEP20", destinationAddress })
     });
   },
   myWithdrawals() {
-    return apiRequest<WithdrawalDTO[]>("/withdrawals/my");
+    return apiRequest<WithdrawalsPageDTO>("/withdrawals/my");
   }
 };
