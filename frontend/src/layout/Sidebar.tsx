@@ -1,4 +1,4 @@
-import { Factory, Gauge, Gem, Landmark, Megaphone, ReceiptText, WalletCards } from "lucide-react";
+import { Bell, Factory, Gauge, Gem, Landmark, Megaphone, ReceiptText, UserRound, WalletCards } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/utils/classNames";
 
@@ -9,7 +9,9 @@ const items = [
   { to: "/wallet", label: "Wallet", icon: WalletCards },
   { to: "/deposits", label: "Depósitos", icon: ReceiptText },
   { to: "/withdrawals", label: "Retiros", icon: Landmark },
-  { to: "/referrals", label: "Referidos", icon: Megaphone }
+  { to: "/referrals", label: "Referidos", icon: Megaphone },
+  { to: "/notifications", label: "Notificaciones", icon: Bell },
+  { to: "/profile", label: "Perfil", icon: UserRound }
 ];
 
 export function Sidebar() {
