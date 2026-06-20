@@ -18,11 +18,12 @@ RUN node --version \
 
 COPY . .
 
-RUN pnpm run build
+RUN pnpm run build \
+  && chmod +x /app/docker-entrypoint.sh
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "pnpm exec vite preview --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["/app/docker-entrypoint.sh"]

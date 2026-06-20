@@ -65,3 +65,14 @@ VITE_API_BASE_URL=https://your-backend.up.railway.app/api
 VITE_APP_NAME=AurumX
 VITE_TELEGRAM_BOT_USERNAME=your_bot_username_without_at
 ```
+
+
+## Runtime environment on Railway
+
+The Docker image generates `dist/env.js` at container startup from Railway runtime variables. This is required because Vite variables are normally embedded at build time. Keep these variables configured in the frontend Railway service:
+
+```env
+VITE_API_BASE_URL=https://aurumx-production.up.railway.app/api
+VITE_APP_NAME=AurumX
+VITE_TELEGRAM_BOT_USERNAME=AurumX1bot
+```
