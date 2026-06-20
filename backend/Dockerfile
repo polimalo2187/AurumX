@@ -1,41 +1,35 @@
-# AurumX Backend - Railway Docker build
-# Fix: avoid Railway/Alpine npm install crashes by using Debian-based Node 22.16.0.
-
 FROM node:22.16.0-bookworm-slim AS build
 
 WORKDIR /app
 
-ENV NODE_ENV=development \
-    NPM_CONFIG_AUDIT=false \
-    NPM_CONFIG_FUND=false \
-    NPM_CONFIG_UPDATE_NOTIFIER=false \
-    NPM_CONFIG_PROGRESS=false \
-    NPM_CONFIG_LOGLEVEL=warn
+ENV CI=true
+ENV NODE_ENV=development
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 COPY package.json package-lock.json ./
+COPY .npmrc ./
 
-# Install devDependencies because TypeScript is required for npm run build.
-# Do not run npm config set production=false; newer npm rejects that option.
 RUN node --version \
-  && npm --version \
-  && npm ci --include=dev --no-audit --no-fund --progress=false \
-  && test -x ./node_modules/.bin/tsc
+  && pnpm --version \
+  && pnpm install --prod=false --no-frozen-lockfile --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src ./src
 
-RUN npm run build
+RUN test -x ./node_modules/.bin/tsc \
+  && pnpm run build
+
+RUN pnpm prune --prod --ignore-scripts
 
 FROM node:22.16.0-bookworm-slim AS runtime
 
 WORKDIR /app
 
-ENV NODE_ENV=production \
-    HOST=0.0.0.0 \
-    PORT=8080
+ENV NODE_ENV=production
 
 COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/package-lock.json ./package-lock.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 
