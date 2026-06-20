@@ -9,6 +9,8 @@ import { UserService } from "../users/user.service";
 import { AuditService } from "../audit/audit.service";
 
 const LOGIN_SESSION_TTL_HOURS = 1;
+const TELEGRAM_START_PREFIX = "login_";
+const TELEGRAM_LOGIN_TOKEN_BYTES = 24;
 
 type TelegramUser = {
   id: number;
@@ -49,7 +51,9 @@ export class TelegramService {
       throw badRequest("TELEGRAM_BOT_USERNAME is not configured", "TELEGRAM_BOT_NOT_CONFIGURED");
     }
 
-    const rawToken = randomBytes(32).toString("hex");
+    // Telegram deep-link start parameters are limited to 64 characters.
+    // Keep the public token short enough for `login_${token}` to be delivered intact.
+    const rawToken = randomBytes(TELEGRAM_LOGIN_TOKEN_BYTES).toString("hex");
     const tokenHash = hashToken(rawToken);
 
     await TelegramLoginSessionModel.create({
@@ -59,7 +63,7 @@ export class TelegramService {
       expiresAt: addHours(new Date(), LOGIN_SESSION_TTL_HOURS)
     });
 
-    const botUrl = `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=login_${rawToken}`;
+    const botUrl = `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=${TELEGRAM_START_PREFIX}${rawToken}`;
 
     await AuditService.log({
       actor: { type: AUDIT_ACTOR_TYPES.SYSTEM },
@@ -202,8 +206,14 @@ export class TelegramService {
 
   private static extractLoginToken(text: string): string | null {
     const [, arg] = text.trim().split(/\s+/, 2);
-    if (!arg?.startsWith("login_")) return null;
-    return arg.slice("login_".length);
+    if (!arg) return null;
+
+    const token = arg.startsWith(TELEGRAM_START_PREFIX) ? arg.slice(TELEGRAM_START_PREFIX.length) : arg;
+
+    // Current tokens are 48 hex characters. Older links may have 64-character tokens.
+    if (!/^[a-f0-9]{32,64}$/i.test(token)) return null;
+
+    return token;
   }
 
   static async sendContactRequest(chatId: string) {
