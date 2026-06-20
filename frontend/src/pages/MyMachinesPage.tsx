@@ -32,7 +32,7 @@ function MachineCard({ machine }: { machine: UserMachineDTO }) {
     <Card>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black">{machine.name || machine.machineType}</h2>
+          <h2 className="text-xl font-black">{machine.name || machine.machineName || machine.machineType}</h2>
           <p className="mt-1 text-sm text-zinc-400">Próximo pago: {countdown}</p>
         </div>
         <Badge tone={machine.status === "ACTIVE" ? "green" : "muted"}>{machine.status}</Badge>
