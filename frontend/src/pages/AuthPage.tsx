@@ -2,32 +2,64 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authApi } from "@/api/auth.api";
+import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/useAuth";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+
+const TELEGRAM_VERIFICATION_TOKEN_KEY = "aurumx_telegram_verification_token";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === "TELEGRAM_LOGIN_NOT_VERIFIED") {
+      return "Todavía no recibimos tu verificación desde Telegram. Abre el bot, toca /start si hace falta y comparte tu número con el botón oficial.";
+    }
+
+    if (error.code === "TELEGRAM_LOGIN_SESSION_EXPIRED") {
+      return "La sesión de Telegram expiró. Crea una nueva verificación.";
+    }
+
+    if (error.code === "TELEGRAM_LOGIN_SESSION_NOT_FOUND") {
+      return "No encontramos la sesión de Telegram. Crea una nueva verificación.";
+    }
+
+    if (error.code === "VALIDATION_ERROR") {
+      return "La sesión local no es válida. Crea una nueva verificación.";
+    }
+
+    return `${error.message}${error.code ? ` (${error.code})` : ""}`;
+  }
+
+  if (error instanceof Error) return error.message;
+  return "No se pudo completar la autenticación.";
+}
 
 export function AuthPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { setSession } = useAuth();
-  const [sessionToken, setSessionToken] = useState("");
+  const [verificationToken, setVerificationToken] = useState(() => sessionStorage.getItem(TELEGRAM_VERIFICATION_TOKEN_KEY) || "");
   const referralCode = params.get("ref") || undefined;
 
   const startLogin = useMutation({
     mutationFn: () => authApi.startTelegramLogin(referralCode),
     onSuccess(data) {
-      setSessionToken(data.sessionToken);
-      window.open(data.botUrl, "_blank", "noopener,noreferrer");
+      setVerificationToken(data.verificationToken);
+      sessionStorage.setItem(TELEGRAM_VERIFICATION_TOKEN_KEY, data.verificationToken);
+      window.location.href = data.botUrl;
     }
   });
 
   const completeLogin = useMutation({
-    mutationFn: () => authApi.completeTelegramLogin(sessionToken),
+    mutationFn: () => authApi.completeTelegramLogin(verificationToken),
     onSuccess(data) {
+      sessionStorage.removeItem(TELEGRAM_VERIFICATION_TOKEN_KEY);
       setSession(data.token, data.user);
       navigate("/dashboard", { replace: true });
     }
   });
+
+  const error = startLogin.error || completeLogin.error;
 
   return (
     <main className="grid min-h-screen place-items-center bg-aurum-black bg-aurumGlow px-4 text-white">
@@ -40,13 +72,13 @@ export function AuthPage() {
           <Button onClick={() => startLogin.mutate()} disabled={startLogin.isPending}>
             {startLogin.isPending ? "Creando sesión..." : "Verificar con Telegram"}
           </Button>
-          <Button variant="secondary" onClick={() => completeLogin.mutate()} disabled={!sessionToken || completeLogin.isPending}>
+          <Button variant="secondary" onClick={() => completeLogin.mutate()} disabled={!verificationToken || completeLogin.isPending}>
             {completeLogin.isPending ? "Validando..." : "Ya compartí mi número, completar login"}
           </Button>
         </div>
 
-        {sessionToken ? <p className="mt-4 text-sm text-aurum-gold">Sesión creada. Abre el bot, comparte tu teléfono y vuelve para completar.</p> : null}
-        {startLogin.error || completeLogin.error ? <p className="mt-4 text-sm text-red-300">No se pudo completar la autenticación.</p> : null}
+        {verificationToken ? <p className="mt-4 text-sm text-aurum-gold">Sesión creada. Abre el bot, comparte tu teléfono y vuelve para completar.</p> : null}
+        {error ? <p className="mt-4 text-sm text-red-300">{getErrorMessage(error)}</p> : null}
       </Card>
     </main>
   );
