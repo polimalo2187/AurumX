@@ -13,6 +13,7 @@ import { WalletPage } from "@/pages/WalletPage";
 import { WithdrawalsPage } from "@/pages/WithdrawalsPage";
 import { ReferralsPage } from "@/pages/ReferralsPage";
 import { NotificationsPage } from "@/pages/NotificationsPage";
+import { ProfilePage } from "@/pages/ProfilePage";
 import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage";
 import { AdminUserDetailPage } from "@/pages/admin/AdminUserDetailPage";
@@ -38,6 +39,7 @@ export function App() {
           <Route path="/withdrawals" element={<WithdrawalsPage />} />
           <Route path="/referrals" element={<ReferralsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 
