@@ -32,6 +32,7 @@ export function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/machines" element={<MachinesPage />} />
           <Route path="/my-machines" element={<MyMachinesPage />} />
+          <Route path="/deposits" element={<DepositPage />} />
           <Route path="/deposits/new/:machinePlanId" element={<DepositPage />} />
           <Route path="/wallet" element={<WalletPage />} />
           <Route path="/withdrawals" element={<WithdrawalsPage />} />
