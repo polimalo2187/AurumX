@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useCountdown } from "@/hooks/useCountdown";
 import { formatUSDT } from "@/utils/formatMoney";
+import { getMachineImagePath } from "@/utils/machineImages";
 
 export function MyMachinesPage() {
   const { data, isLoading } = useQuery({ queryKey: ["my-machines"], queryFn: machinesApi.myMachines });
@@ -28,16 +29,25 @@ export function MyMachinesPage() {
 
 function MachineCard({ machine }: { machine: UserMachineDTO }) {
   const countdown = useCountdown(machine.nextRewardAt);
+  const machineName = machine.name || machine.machineName || machine.machineType;
+  const imageSrc = getMachineImagePath(machine.slug || machine.machineSlug, machineName);
+
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black">{machine.name || machine.machineName || machine.machineType}</h2>
-          <p className="mt-1 text-sm text-zinc-400">Próximo pago: {countdown}</p>
+    <Card className="overflow-hidden p-0">
+      <div className="relative h-52 overflow-hidden border-b border-white/10 bg-black/40">
+        <img src={imageSrc} alt={machineName} className="h-full w-full object-cover" loading="lazy" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+        <div className="absolute left-5 right-5 top-5 flex items-start justify-between gap-4">
+          <div className="rounded-2xl border border-aurum-gold/30 bg-black/50 px-3 py-2 text-xs font-bold uppercase tracking-[0.25em] text-aurum-gold backdrop-blur-sm">Producción activa</div>
+          <Badge tone={machine.status === "ACTIVE" ? "green" : "muted"}>{machine.status}</Badge>
         </div>
-        <Badge tone={machine.status === "ACTIVE" ? "green" : "muted"}>{machine.status}</Badge>
+        <div className="absolute bottom-5 left-5 right-5">
+          <h2 className="text-2xl font-black text-white">{machineName}</h2>
+          <p className="mt-1 text-sm text-zinc-300">Próximo pago: {countdown}</p>
+        </div>
       </div>
-      <div className="mt-5">
+      <div className="p-6">
+      <div className="mt-0">
         <div className="mb-2 flex justify-between text-sm text-zinc-300">
           <span>{formatUSDT(machine.paidAmount)}</span>
           <span>{formatUSDT(machine.maxPayoutAmount)}</span>
@@ -47,6 +57,7 @@ function MachineCard({ machine }: { machine: UserMachineDTO }) {
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl bg-black/30 p-3"><span className="text-zinc-500">Ciclo</span><strong className="block text-white">{formatUSDT(machine.effectiveCycleRewardAmount)}</strong></div>
         <div className="rounded-2xl bg-black/30 p-3"><span className="text-zinc-500">Potencia</span><strong className="block text-white">+{machine.powerPercentApplied}%</strong></div>
+      </div>
       </div>
     </Card>
   );
