@@ -59,8 +59,13 @@ export type MachinePlanDTO = {
 
 export type UserMachineDTO = {
   id: string;
+  machinePlanId?: string;
   machineType: "FREE" | "PAID" | "REWARD";
+  sourceType?: "FREE_CLAIM" | "PAID_DEPOSIT" | "REFERRAL_REWARD";
   name?: string;
+  slug?: string;
+  machineName?: string;
+  machineSlug?: string;
   principalAmount: number;
   maxPayoutAmount: number;
   paidAmount: number;

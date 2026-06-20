@@ -9,7 +9,7 @@ export const machinesApi = {
     return apiRequest<UserMachineDTO[]>("/machines/my");
   },
   claimFreeMachine() {
-    return apiRequest<{ message: string; machine: UserMachineDTO }>("/machines/free/claim", {
+    return apiRequest<UserMachineDTO>("/machines/free/claim", {
       method: "POST"
     });
   }
