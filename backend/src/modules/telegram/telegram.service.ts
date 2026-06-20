@@ -102,16 +102,16 @@ export class TelegramService {
 
     if (message.text?.startsWith("/start")) {
       await TelegramService.handleStart(message);
-      return { handled: true };
+      return { handled: true, type: "start" };
     }
 
     if (message.contact) {
-      await TelegramService.handleContact(message);
-      return { handled: true };
+      const result = await TelegramService.handleContact(message);
+      return { handled: true, type: "contact", ...result };
     }
 
     await TelegramService.sendMessage(message.chat.id.toString(), "Para verificar tu cuenta, toca /start y comparte tu número desde el botón del bot.");
-    return { handled: true };
+    return { handled: true, type: "unknown_message" };
   }
 
   private static async handleStart(message: TelegramMessage) {
@@ -135,14 +135,14 @@ export class TelegramService {
   }
 
   private static async handleContact(message: TelegramMessage) {
-    if (!message.from || !message.contact) return;
+    if (!message.from || !message.contact) return { verified: false };
 
     const telegramId = String(message.from.id);
     const contactOwnerId = message.contact.user_id ? String(message.contact.user_id) : "";
 
     if (contactOwnerId !== telegramId) {
-      await TelegramService.sendMessage(message.chat.id.toString(), "Ese número no pertenece a tu cuenta de Telegram. Comparte tu propio contacto desde el botón del bot.");
-      throw badRequest("Telegram contact does not belong to sender", "TELEGRAM_CONTACT_MISMATCH");
+      await TelegramService.sendMessage(message.chat.id.toString(), "Ese número no pertenece a tu cuenta de Telegram. Comparte tu propio contacto desde el botón oficial del bot.");
+      return { verified: false, reason: "TELEGRAM_CONTACT_MISMATCH" };
     }
 
     const pendingSession = await TelegramLoginSessionModel.findOne({
@@ -150,6 +150,11 @@ export class TelegramService {
       telegramId,
       expiresAt: { $gt: new Date() }
     }).sort({ createdAt: -1 });
+
+    if (!pendingSession) {
+      await TelegramService.sendMessage(message.chat.id.toString(), "No encontramos una sesión activa para este login. Vuelve a AurumX, toca Verificar con Telegram y comparte tu número otra vez.");
+      return { verified: false, reason: "TELEGRAM_LOGIN_SESSION_NOT_FOUND" };
+    }
 
     const mongoSession = await mongoose.startSession();
     let userId = "";
@@ -163,20 +168,18 @@ export class TelegramService {
             firstName: message.from?.first_name,
             lastName: message.from?.last_name,
             phoneNumber: message.contact?.phone_number ?? "",
-            referralCode: pendingSession?.referralCode || undefined
+            referralCode: pendingSession.referralCode || undefined
           },
           mongoSession
         );
 
         userId = user._id.toString();
 
-        if (pendingSession) {
-          pendingSession.status = TELEGRAM_LOGIN_SESSION_STATUSES.VERIFIED;
-          pendingSession.telegramId = telegramId;
-          pendingSession.userId = user._id;
-          pendingSession.verifiedAt = new Date();
-          await pendingSession.save({ session: mongoSession });
-        }
+        pendingSession.status = TELEGRAM_LOGIN_SESSION_STATUSES.VERIFIED;
+        pendingSession.telegramId = telegramId;
+        pendingSession.userId = user._id;
+        pendingSession.verifiedAt = new Date();
+        await pendingSession.save({ session: mongoSession });
 
         await AuditService.log(
           {
@@ -193,8 +196,8 @@ export class TelegramService {
       await mongoSession.endSession();
     }
 
-    await TelegramService.sendMessage(message.chat.id.toString(), "✅ Cuenta verificada correctamente en AurumX. Ya puedes volver a la plataforma.");
-    return { userId };
+    await TelegramService.sendMessage(message.chat.id.toString(), "✅ Cuenta verificada correctamente en AurumX. Ya puedes volver a la plataforma y completar el login.");
+    return { verified: true, userId };
   }
 
   private static extractLoginToken(text: string): string | null {
@@ -217,6 +220,31 @@ export class TelegramService {
 
   static async sendMessage(chatId: string, text: string) {
     return TelegramService.sendTelegramApi("sendMessage", { chat_id: chatId, text });
+  }
+
+  static getWebhookUrl(): string | null {
+    if (!env.APP_PUBLIC_URL || !env.TELEGRAM_WEBHOOK_SECRET) return null;
+
+    const baseUrl = env.APP_PUBLIC_URL.replace(/\/$/, "");
+    return `${baseUrl}/api/telegram/webhook?secret=${encodeURIComponent(env.TELEGRAM_WEBHOOK_SECRET)}`;
+  }
+
+  static async ensureWebhook() {
+    const url = TelegramService.getWebhookUrl();
+
+    if (!url || !env.TELEGRAM_BOT_TOKEN) {
+      return { skipped: true, reason: "TELEGRAM_WEBHOOK_NOT_CONFIGURED" };
+    }
+
+    return TelegramService.sendTelegramApi("setWebhook", {
+      url,
+      allowed_updates: ["message"],
+      drop_pending_updates: false
+    });
+  }
+
+  static async getWebhookInfo() {
+    return TelegramService.sendTelegramApi("getWebhookInfo", {});
   }
 
   static async sendTelegramApi(method: string, body: Record<string, unknown>) {
