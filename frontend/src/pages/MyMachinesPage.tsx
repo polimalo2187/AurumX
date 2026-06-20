@@ -69,8 +69,7 @@ function MachineCard({ machine }: { machine: UserMachineDTO }) {
       <div className="relative h-52 overflow-hidden border-b border-white/10 bg-black/40">
         <img src={imageSrc} alt={machineName} className="h-full w-full object-cover" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
-        <div className="absolute left-5 right-5 top-5 flex items-start justify-between gap-4">
-          <div className="rounded-2xl border border-aurum-gold/30 bg-black/50 px-3 py-2 text-xs font-bold uppercase tracking-[0.25em] text-aurum-gold backdrop-blur-sm">Producción activa</div>
+        <div className="absolute right-5 top-5">
           <Badge tone={machine.status === "ACTIVE" ? "green" : "muted"}>{machine.status}</Badge>
         </div>
         <div className="absolute bottom-5 left-5 right-5">
