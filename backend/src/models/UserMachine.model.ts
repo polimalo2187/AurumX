@@ -147,6 +147,19 @@ userMachineSchema.index({ status: 1, nextRewardAt: 1 });
 userMachineSchema.index({ userId: 1, status: 1, createdAt: -1 });
 userMachineSchema.index({ userId: 1, machineType: 1, createdAt: -1 });
 
+// A verified user can only have one non-cancelled Pico Inicial / FREE_CLAIM machine.
+// CANCELLED duplicates are allowed so old duplicated rows can be repaired safely.
+userMachineSchema.index(
+  { userId: 1, sourceType: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      sourceType: USER_MACHINE_SOURCE_TYPES.FREE_CLAIM,
+      status: { $in: [USER_MACHINE_STATUSES.ACTIVE, USER_MACHINE_STATUSES.COMPLETED] }
+    }
+  }
+);
+
 export type UserMachine = InferSchemaType<typeof userMachineSchema> & {
   _id: Types.ObjectId;
 };
