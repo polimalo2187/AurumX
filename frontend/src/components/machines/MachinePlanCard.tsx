@@ -50,8 +50,7 @@ export function MachinePlanCard({ plan, onClaimFree }: { plan: MachinePlanDTO; o
         <div className="relative h-56 overflow-hidden border-b border-white/10 bg-black/40">
           <img src={imageSrc} alt={plan.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-          <div className="absolute left-5 right-5 top-5 flex items-start justify-between gap-4">
-            <div className="rounded-2xl border border-aurum-gold/30 bg-black/50 px-3 py-2 text-xs font-bold uppercase tracking-[0.25em] text-aurum-gold backdrop-blur-sm">AurumX</div>
+          <div className="absolute right-5 top-5">
             <Badge tone={plan.type === "PAID" ? "gold" : plan.type === "REWARD" ? "green" : "muted"}>{plan.type}</Badge>
           </div>
           <div className="absolute bottom-5 left-5 right-5">
