@@ -10,7 +10,9 @@
     "seed:machines": "tsx src/seeds/machine-plans.seed.ts",
     "test": "node --test --import tsx --test-reporter=spec tests/**/*.test.ts",
     "check:readiness": "tsx scripts/backend-readiness-check.ts",
-    "check": "npm run build && npm test && npm run check:readiness"
+    "check": "npm run build && npm test && npm run check:readiness",
+    "repair:free-machines": "tsx src/scripts/repair-free-machine-duplicates.ts",
+    "repair:free-machines:dist": "node dist/scripts/repair-free-machine-duplicates.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -153,3 +153,19 @@ Aurora:
 - No guardar llaves privadas de retiro en el backend; los retiros son manuales.
 - Proteger endpoints internos con `x-internal-job-secret`.
 - Mantener CORS cerrado al dominio real del frontend.
+
+## Reparar Pico Inicial duplicado
+
+Si un usuario quedó con más de una máquina gratis por doble toque o por pruebas anteriores, primero despliega esta versión y luego ejecuta una sola vez en Railway, dentro del servicio `backend`:
+
+```bash
+node dist/scripts/repair-free-machine-duplicates.js
+```
+
+El script conserva la primera máquina `FREE_CLAIM` no cancelada de cada usuario, cancela las duplicadas y sincroniza `FreeMachineClaim` con la máquina válida. Después vuelve a dejar el start command normal:
+
+```bash
+node dist/server.js
+```
+
+Regla económica vigente de AurumX: cada máquina tiene payout máximo 200% y duración base de 20 ciclos de 24 horas. Por eso el pago base por ciclo es `maxPayoutAmount / 20`, equivalente a 10% diario sobre el principal.
