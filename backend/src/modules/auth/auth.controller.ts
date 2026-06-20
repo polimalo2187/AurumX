@@ -25,7 +25,7 @@ const startTelegramLoginSchema = z.object({
 });
 
 const completeTelegramLoginSchema = z.object({
-  verificationToken: z.string().min(32)
+  verificationToken: z.string().min(32).max(64)
 });
 
 export class AuthController {
