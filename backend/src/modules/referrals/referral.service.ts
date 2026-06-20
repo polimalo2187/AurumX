@@ -1,4 +1,5 @@
 import mongoose, { type ClientSession, type Types } from "mongoose";
+import { env } from "../../config/env";
 import {
   SYSTEM_RULES,
   MACHINE_PLAN_SLUGS,
@@ -34,6 +35,11 @@ export type ReferralStatusDTO = {
   claimableRewardMachines: number;
 };
 
+function buildReferralLink(referralCode: string): string {
+  const frontendUrl = (env.FRONTEND_URL || "https://aurumx-production-cdd0.up.railway.app").replace(/\/+$/, "");
+  return `${frontendUrl}/auth?ref=${encodeURIComponent(referralCode)}`;
+}
+
 
 export class ReferralService {
   static getReferralStats(user: User): ReferralStatusDTO {
@@ -44,6 +50,7 @@ export class ReferralService {
 
     return {
       referralCode: user.referralCode,
+      referralLink: buildReferralLink(user.referralCode),
       validReferralCount: stats.validReferralCount,
       activePowerPercent: stats.activePowerPercent,
       maxPowerPercent: stats.maxPowerPercent,
