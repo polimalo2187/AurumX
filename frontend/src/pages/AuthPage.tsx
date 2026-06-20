@@ -81,7 +81,7 @@ export function AuthPage() {
           </Button>
         </div>
 
-        {verificationToken ? <p className="mt-4 text-sm text-aurum-gold">Sesión creada. Abre el bot, comparte tu teléfono y vuelve para completar.</p> : null}
+        {verificationToken ? <p className="mt-4 text-sm text-aurum-gold">Sesión creada. Abre el bot desde este botón, comparte tu teléfono y vuelve para completar. No escribas /start manualmente.</p> : null}
         {error ? <p className="mt-4 text-sm text-red-300">{getErrorMessage(error)}</p> : null}
       </Card>
     </main>
