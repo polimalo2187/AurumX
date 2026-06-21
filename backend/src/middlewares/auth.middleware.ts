@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
-import { UserModel, USER_STATUSES, type User } from "../models/User.model";
+import { UserModel, USER_STATUSES, USER_ROLES, type User } from "../models/User.model";
 import { unauthorized, forbidden } from "../utils/errors";
 import { JwtService } from "../modules/auth/jwt.service";
+import { isAdminPhone } from "../config/env";
 
 export type AuthenticatedRequest = Request & {
   user: User;
@@ -26,6 +27,11 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
 
     if (user.status !== USER_STATUSES.ACTIVE) {
       throw forbidden("User is blocked", "USER_BLOCKED");
+    }
+
+    if (user.phoneVerified && user.role !== USER_ROLES.ADMIN && (isAdminPhone(user.phoneE164) || isAdminPhone(user.phoneNumber))) {
+      user.role = USER_ROLES.ADMIN;
+      await user.save();
     }
 
     (req as AuthenticatedRequest).user = user;
