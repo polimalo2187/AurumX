@@ -1,4 +1,3 @@
-import type { Types } from "mongoose";
 import { UserModel, USER_STATUSES, USER_ROLES, type User } from "../../models/User.model";
 import { unauthorized, forbidden, badRequest, conflict } from "../../utils/errors";
 import { adminTelegramIds } from "../../config/env";
@@ -91,16 +90,21 @@ export class AuthService {
 
     const existingPhone = await UserModel.findOne({ phoneNumber: phoneE164 });
     if (existingPhone) {
-      if (existingPhone.phoneVerified) {
-        throw conflict("Este teléfono ya está registrado", "PHONE_ALREADY_USED");
+      if (existingPhone.passwordHash) {
+        throw conflict("Este teléfono ya está registrado. Usa Iniciar sesión.", "PHONE_ALREADY_USED");
       }
 
+      // Migración segura para usuarios creados con la verificación anterior de Telegram:
+      // si el teléfono existe pero no tiene contraseña, permitimos crear credenciales,
+      // pero bloqueamos el login hasta que vuelva a confirmar el mismo número por Telegram.
       existingPhone.username = username;
       existingPhone.phoneCountryCode = countryCode;
       existingPhone.phoneNationalNumber = phoneNationalNumber;
       existingPhone.phoneE164 = phoneE164;
       existingPhone.phoneNumber = phoneE164;
       existingPhone.passwordHash = hashPassword(input.password);
+      existingPhone.phoneVerified = false;
+      existingPhone.phoneVerifiedAt = null;
       await existingPhone.save();
 
       const telegram = await TelegramService.createRegistrationSession({
@@ -118,7 +122,7 @@ export class AuthService {
     }
 
     const referralCode = await UserService.generateUniqueReferralCode();
-    let referredByUserId: Types.ObjectId | null = null;
+    let referredByUserId = null;
 
     if (input.referralCode) {
       const sponsor = await UserModel.findOne({ referralCode: input.referralCode.trim().toUpperCase() });
