@@ -1,4 +1,4 @@
-import { Bell, Factory, Gauge, Gem, Landmark, Megaphone, ReceiptText, UserRound, WalletCards } from "lucide-react";
+import { Bell, Factory, Gauge, Gem, Landmark, Megaphone, ReceiptText, TrendingUp, UserRound, WalletCards } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/utils/classNames";
 
@@ -7,6 +7,7 @@ const items = [
   { to: "/machines", label: "Máquinas", icon: Factory },
   { to: "/my-machines", label: "Mis máquinas", icon: Gem },
   { to: "/wallet", label: "Wallet", icon: WalletCards },
+  { to: "/rewards", label: "Recompensas", icon: TrendingUp },
   { to: "/deposits", label: "Depósitos", icon: ReceiptText },
   { to: "/withdrawals", label: "Retiros", icon: Landmark },
   { to: "/referrals", label: "Referidos", icon: Megaphone },
