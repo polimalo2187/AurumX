@@ -1,6 +1,7 @@
-import { Factory, Gauge, Gem, Megaphone, TrendingUp, WalletCards } from "lucide-react";
+import { Factory, Gauge, Gem, Megaphone, Shield, TrendingUp, WalletCards } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/utils/classNames";
+import { useAuth } from "@/auth/useAuth";
 
 const items = [
   { to: "/dashboard", label: "Inicio", icon: Gauge },
@@ -12,10 +13,13 @@ const items = [
 ];
 
 export function MobileNav() {
+  const { isAdmin } = useAuth();
+  const visibleItems = isAdmin ? [...items, { to: "/admin/dashboard", label: "Admin", icon: Shield }] : items;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-aurum-black/90 px-2 py-2 backdrop-blur-xl lg:hidden">
-      <div className="grid grid-cols-6 gap-1">
-        {items.map((item) => (
+      <div className="grid grid-cols-7 gap-1">
+        {visibleItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

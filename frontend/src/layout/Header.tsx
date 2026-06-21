@@ -23,7 +23,7 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           {isAdmin ? (
-            <Link to="/admin/dashboard" className="hidden rounded-xl border border-aurum-gold/20 px-3 py-2 text-sm font-bold text-aurum-gold md:inline-flex">
+            <Link to="/admin/dashboard" className="inline-flex rounded-xl border border-aurum-gold/20 px-3 py-2 text-sm font-bold text-aurum-gold">
               <Shield size={16} className="mr-2" /> Admin
             </Link>
           ) : null}
