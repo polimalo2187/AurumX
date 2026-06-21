@@ -242,7 +242,7 @@ export class TelegramService {
           user.phoneNumber = normalizeTelegramPhone(receivedPhone);
           user.phoneE164 = normalizeTelegramPhone(receivedPhone);
           user.phoneVerified = true;
-          user.phoneVerifiedAt = user.phoneVerifiedAt ?? new Date();
+          user.phoneVerifiedAt = new Date();
           await user.save({ session: mongoSession });
 
           userId = user._id.toString();
