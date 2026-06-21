@@ -48,7 +48,7 @@ const DEFAULT_COUNTRY: CountryOption = {
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === "PHONE_NOT_VERIFIED") {
-      return "Esta cuenta todavía no está verificada. Completa la verificación con Telegram.";
+      return "Esta cuenta todavía no está verificada. Entra en Crear cuenta con el mismo teléfono para reenviar la verificación de Telegram.";
     }
 
     if (error.code === "INVALID_CREDENTIALS") {
