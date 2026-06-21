@@ -16,6 +16,7 @@ import { useCountdown } from "@/hooks/useCountdown";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { formatUSDT } from "@/utils/formatMoney";
 import { buildReferralLink } from "@/utils/referralLink";
+import { useAuth } from "@/auth/useAuth";
 
 export function DashboardPage() {
   const dashboard = useQuery({ queryKey: ["dashboard"], queryFn: usersApi.dashboard });
@@ -24,6 +25,7 @@ export function DashboardPage() {
   const withdrawals = useQuery({ queryKey: ["withdrawals"], queryFn: withdrawalsApi.myWithdrawals });
   const referrals = useQuery({ queryKey: ["referrals"], queryFn: referralsApi.me });
   const { copied, copy } = useCopyToClipboard();
+  const { isAdmin } = useAuth();
 
   const data = dashboard.data;
   const activeMachines = (machines.data || []).filter((machine) => machine.status === "ACTIVE");
@@ -72,6 +74,19 @@ export function DashboardPage() {
           </div>
         </div>
       </Card>
+
+
+      {isAdmin ? (
+        <Card className="border-aurum-gold/30 bg-aurum-gold/10">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+            <div>
+              <h2 className="text-xl font-black text-aurum-gold">Panel administrativo disponible</h2>
+              <p className="mt-2 text-sm text-zinc-300">Tu cuenta tiene permisos de administrador. En móvil también aparece el acceso en la barra inferior.</p>
+            </div>
+            <Link to="/admin/dashboard"><Button>Entrar al admin</Button></Link>
+          </div>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Saldo disponible" value={formatUSDT(data?.wallet.availableUSDT)} icon={<WalletCards />} hint="Listo para retiro" />
