@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from "crypto";
 import mongoose, { type Types } from "mongoose";
-import { env } from "../../config/env";
+import { env, isAdminPhone } from "../../config/env";
 import { TelegramLoginSessionModel, TELEGRAM_LOGIN_SESSION_STATUSES } from "../../models/TelegramLoginSession.model";
-import { UserModel } from "../../models/User.model";
+import { UserModel, USER_ROLES } from "../../models/User.model";
 import { AUDIT_ACTIONS, AUDIT_ACTOR_TYPES } from "../../models/AuditLog.model";
 import { badRequest, forbidden, notFound } from "../../utils/errors";
 import { addHours } from "../../utils/dates";
@@ -240,6 +240,11 @@ export class TelegramService {
             }
 
             if (existingTelegram.passwordHash) {
+              if (isAdminPhone(existingTelegram.phoneE164) || isAdminPhone(existingTelegram.phoneNumber) || isAdminPhone(receivedPhone)) {
+                existingTelegram.role = USER_ROLES.ADMIN;
+                await existingTelegram.save({ session: mongoSession });
+              }
+
               await TelegramService.sendMessage(message.chat.id.toString(), "✅ Esta cuenta ya estaba verificada. Vuelve a AurumX e inicia sesión con tu usuario o teléfono y contraseña.");
               userId = existingTelegram._id.toString();
 
@@ -259,6 +264,9 @@ export class TelegramService {
             existingTelegram.phoneE164 = normalizeTelegramPhone(receivedPhone);
             existingTelegram.phoneVerified = true;
             existingTelegram.phoneVerifiedAt = new Date();
+            if (isAdminPhone(existingTelegram.phoneE164) || isAdminPhone(existingTelegram.phoneNumber) || isAdminPhone(receivedPhone)) {
+              existingTelegram.role = USER_ROLES.ADMIN;
+            }
             existingTelegram.telegramUsername = message.from?.username ?? existingTelegram.telegramUsername;
             existingTelegram.firstName = message.from?.first_name ?? existingTelegram.firstName;
             existingTelegram.lastName = message.from?.last_name ?? existingTelegram.lastName;
@@ -296,6 +304,9 @@ export class TelegramService {
           user.phoneE164 = normalizeTelegramPhone(receivedPhone);
           user.phoneVerified = true;
           user.phoneVerifiedAt = new Date();
+          if (isAdminPhone(user.phoneE164) || isAdminPhone(user.phoneNumber) || isAdminPhone(receivedPhone)) {
+            user.role = USER_ROLES.ADMIN;
+          }
           await user.save({ session: mongoSession });
 
           userId = user._id.toString();
