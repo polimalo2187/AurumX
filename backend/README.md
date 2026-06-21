@@ -169,3 +169,12 @@ node dist/server.js
 ```
 
 Regla económica vigente de AurumX: cada máquina tiene payout máximo 200% y duración base de 20 ciclos de 24 horas. Por eso el pago base por ciclo es `maxPayoutAmount / 20`, equivalente a 10% diario sobre el principal.
+
+
+### Administración por teléfono
+
+```env
+ADMIN_PHONE_NUMBERS=+5359494299,+1234567890
+```
+
+Los teléfonos deben ir en formato internacional. Cuando un usuario verifica ese teléfono con Telegram, el backend lo promueve a `ADMIN`.
