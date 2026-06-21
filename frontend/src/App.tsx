@@ -10,6 +10,7 @@ import { MachinesPage } from "@/pages/MachinesPage";
 import { MyMachinesPage } from "@/pages/MyMachinesPage";
 import { DepositPage } from "@/pages/DepositPage";
 import { WalletPage } from "@/pages/WalletPage";
+import { RewardsPage } from "@/pages/RewardsPage";
 import { WithdrawalsPage } from "@/pages/WithdrawalsPage";
 import { ReferralsPage } from "@/pages/ReferralsPage";
 import { NotificationsPage } from "@/pages/NotificationsPage";
@@ -36,6 +37,7 @@ export function App() {
           <Route path="/deposits" element={<DepositPage />} />
           <Route path="/deposits/new/:machinePlanId" element={<DepositPage />} />
           <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/rewards" element={<RewardsPage />} />
           <Route path="/withdrawals" element={<WithdrawalsPage />} />
           <Route path="/referrals" element={<ReferralsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
