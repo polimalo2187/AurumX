@@ -193,7 +193,7 @@ export class AuthService {
     const token = JwtService.sign({
       sub: user._id.toString(),
       role: user.role,
-      telegramId: user.telegramId
+      telegramId: user.telegramId ?? ""
     });
 
     return {
@@ -220,7 +220,7 @@ export class AuthService {
     const token = JwtService.sign({
       sub: user._id.toString(),
       role: user.role,
-      telegramId: user.telegramId
+      telegramId: user.telegramId ?? ""
     });
 
     return {
