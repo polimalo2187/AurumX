@@ -266,8 +266,8 @@ userSchema.index({ referredByUserId: 1, createdAt: -1 });
 
 export type User = HydratedDocument<UserFields> & {
   _id: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export const UserModel = model<UserFields>("User", userSchema);
