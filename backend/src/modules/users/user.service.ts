@@ -4,7 +4,7 @@ import { UserModel, USER_ROLES, type User } from "../../models/User.model";
 import { WalletService } from "../wallet/wallet.service";
 import { conflict, notFound, badRequest } from "../../utils/errors";
 import { normalizeTelegramPhone } from "../../utils/phone";
-import { adminTelegramIds } from "../../config/env";
+import { adminTelegramIds, isAdminPhone } from "../../config/env";
 
 export type TelegramVerifiedUserInput = {
   telegramId: string;
@@ -104,7 +104,7 @@ export class UserService {
         }
       }
 
-      const role = adminTelegramIds.includes(telegramId) ? USER_ROLES.ADMIN : USER_ROLES.USER;
+      const role = adminTelegramIds.includes(telegramId) || isAdminPhone(phoneNumber) ? USER_ROLES.ADMIN : USER_ROLES.USER;
 
       const createdUsers = await UserModel.create(
         [
@@ -144,6 +144,10 @@ export class UserService {
     user.phoneE164 = phoneNumber;
     user.phoneVerified = true;
     user.phoneVerifiedAt = user.phoneVerifiedAt ?? new Date();
+
+    if (adminTelegramIds.includes(telegramId) || isAdminPhone(phoneNumber)) {
+      user.role = USER_ROLES.ADMIN;
+    }
 
     if (!user.referralCode) {
       user.referralCode = await UserService.generateUniqueReferralCode();
