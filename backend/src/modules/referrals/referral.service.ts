@@ -83,7 +83,7 @@ export class ReferralService {
         telegramUsername: referred.telegramUsername,
         firstName: referred.firstName,
         lastName: referred.lastName,
-        joinedAt: referred.createdAt,
+        joinedAt: (referred as unknown as { createdAt?: Date }).createdAt,
         status: validReferredIds.has(referred._id.toString())
           ? "PAID_MACHINE_ACTIVE"
           : "REGISTERED_OR_VERIFIED",
