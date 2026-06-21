@@ -1,6 +1,6 @@
 import { UserModel, USER_STATUSES, USER_ROLES, type User } from "../../models/User.model";
 import { unauthorized, forbidden, badRequest, conflict } from "../../utils/errors";
-import { adminTelegramIds } from "../../config/env";
+import { adminTelegramIds, isAdminPhone } from "../../config/env";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import { normalizeCountryCode, normalizePhoneE164, normalizeTelegramPhone } from "../../utils/phone";
 import { UserService } from "../users/user.service";
@@ -110,6 +110,9 @@ export class AuthService {
       existingPhone.phoneE164 = phoneE164;
       existingPhone.phoneNumber = phoneE164;
       existingPhone.passwordHash = hashPassword(input.password);
+      if (isAdminPhone(phoneE164)) {
+        existingPhone.role = USER_ROLES.ADMIN;
+      }
       existingPhone.phoneVerified = false;
       existingPhone.phoneVerifiedAt = null;
       await existingPhone.save();
@@ -138,7 +141,7 @@ export class AuthService {
       }
     }
 
-    const role = adminTelegramIds.includes(phoneE164) ? USER_ROLES.ADMIN : USER_ROLES.USER;
+    const role = adminTelegramIds.includes(phoneE164) || isAdminPhone(phoneE164) ? USER_ROLES.ADMIN : USER_ROLES.USER;
 
     const user = await UserModel.create({
       username,
@@ -194,6 +197,10 @@ export class AuthService {
       throw forbidden("User is blocked", "USER_BLOCKED");
     }
 
+    if (isAdminPhone(user.phoneE164) || isAdminPhone(user.phoneNumber)) {
+      user.role = USER_ROLES.ADMIN;
+    }
+
     user.lastLoginAt = new Date();
     await user.save();
 
@@ -222,6 +229,11 @@ export class AuthService {
 
     if (user.status !== USER_STATUSES.ACTIVE) {
       throw forbidden("User is blocked", "USER_BLOCKED");
+    }
+
+    if (isAdminPhone(user.phoneE164) || isAdminPhone(user.phoneNumber)) {
+      user.role = USER_ROLES.ADMIN;
+      await user.save();
     }
 
     const token = JwtService.sign({
