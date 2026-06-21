@@ -41,7 +41,8 @@ const envSchema = z.object({
   RISK_SMALL_WITHDRAWAL_COUNT_7D: z.coerce.number().default(3),
   RISK_REFERRAL_SPIKE_COUNT_24H: z.coerce.number().default(8),
 
-  ADMIN_TELEGRAM_IDS: z.string().optional().default("")
+  ADMIN_TELEGRAM_IDS: z.string().optional().default(""),
+  ADMIN_PHONE_NUMBERS: z.string().optional().default("")
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -81,9 +82,24 @@ export const env = parsed.data;
 
 export const isProduction = env.NODE_ENV === "production";
 
+function normalizeAdminPhone(value: string): string {
+  const digits = value.replace(/\D+/g, "");
+  return digits ? `+${digits}` : "";
+}
+
 export const adminTelegramIds = env.ADMIN_TELEGRAM_IDS
   ? env.ADMIN_TELEGRAM_IDS.split(",").map((id) => id.trim()).filter(Boolean)
   : [];
+
+export const adminPhoneNumbers = env.ADMIN_PHONE_NUMBERS
+  ? env.ADMIN_PHONE_NUMBERS.split(",").map((phone) => normalizeAdminPhone(phone)).filter(Boolean)
+  : [];
+
+export function isAdminPhone(phoneNumber?: string | null): boolean {
+  if (!phoneNumber) return false;
+  const normalized = normalizeAdminPhone(phoneNumber);
+  return Boolean(normalized && adminPhoneNumbers.includes(normalized));
+}
 
 export const corsOrigins = env.CORS_ORIGINS
   ? env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
