@@ -10,13 +10,7 @@ import { Card } from "@/components/ui/Card";
 
 const REGISTRATION_VERIFICATION_TOKEN_KEY = "aurumx_registration_verification_token";
 
-type CountryOption = {
-  flag: string;
-  name: string;
-  code: string;
-};
-
-const countries: CountryOption[] = [
+const countries = [
   { flag: "🇺🇸", name: "Estados Unidos", code: "+1" },
   { flag: "🇨🇺", name: "Cuba", code: "+53" },
   { flag: "🇲🇽", name: "México", code: "+52" },
@@ -38,8 +32,6 @@ const countries: CountryOption[] = [
   { flag: "🇳🇮", name: "Nicaragua", code: "+505" },
   { flag: "🇵🇾", name: "Paraguay", code: "+595" }
 ];
-
-const defaultCountry = countries[0] as CountryOption;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -79,6 +71,10 @@ function getErrorMessage(error: unknown): string {
       return error.message;
     }
 
+    if (error.code === "INTERNAL_ERROR") {
+      return "El backend devolvió un error interno. Revisa los logs del backend en Railway.";
+    }
+
     return `${error.message}${error.code ? ` (${error.code})` : ""}`;
   }
 
@@ -93,7 +89,7 @@ export function AuthPage() {
 
   const referralCode = params.get("ref") || undefined;
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [selectedCountry, setSelectedCountry] = useState<CountryOption>(defaultCountry);
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [verificationToken, setVerificationToken] = useState(() => sessionStorage.getItem(REGISTRATION_VERIFICATION_TOKEN_KEY) || "");
@@ -204,7 +200,7 @@ export function AuthPage() {
                 value={`${selectedCountry.code}|${selectedCountry.name}`}
                 onChange={(event) => {
                   const [code, name] = event.target.value.split("|");
-                  const next = countries.find((country) => country.code === code && country.name === name) || defaultCountry;
+                  const next = countries.find((country) => country.code === code && country.name === name) || countries[0];
                   setSelectedCountry(next);
                 }}
                 className="rounded-2xl border border-white/10 bg-black/40 px-4 py-4 font-bold text-white outline-none"
