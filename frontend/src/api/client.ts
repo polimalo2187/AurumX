@@ -105,7 +105,13 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     : null;
 
   if (!response.ok) {
-    throw new ApiError(response.status, payload || { message: response.statusText });
+    const fallbackMessage = response.status === 404
+      ? "Ruta de API no encontrada. Revisa que el backend esté actualizado y desplegado."
+      : response.status >= 500
+        ? "El backend devolvió un error interno. Revisa los logs del servicio backend."
+        : response.statusText || "Error de API";
+
+    throw new ApiError(response.status, payload || { message: fallbackMessage });
   }
 
   return unwrapPayload<T>(payload);
