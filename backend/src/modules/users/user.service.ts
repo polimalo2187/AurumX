@@ -3,6 +3,7 @@ import type { ClientSession, Types } from "mongoose";
 import { UserModel, USER_ROLES, type User } from "../../models/User.model";
 import { WalletService } from "../wallet/wallet.service";
 import { conflict, notFound, badRequest } from "../../utils/errors";
+import { normalizeTelegramPhone } from "../../utils/phone";
 import { adminTelegramIds } from "../../config/env";
 
 export type TelegramVerifiedUserInput = {
@@ -15,18 +16,24 @@ export type TelegramVerifiedUserInput = {
 };
 
 function normalizePhone(phoneNumber: string): string {
-  return phoneNumber.replace(/\s+/g, "").trim();
+  return normalizeTelegramPhone(phoneNumber);
 }
 
 export function sanitizeUser(user: User) {
   return {
     id: user._id.toString(),
     telegramId: user.telegramId,
+    username: user.username,
     telegramUsername: user.telegramUsername,
     firstName: user.firstName,
     lastName: user.lastName,
     phoneNumber: user.phoneNumber,
+    phoneCountryCode: user.phoneCountryCode,
+    phoneNationalNumber: user.phoneNationalNumber,
+    phoneE164: user.phoneE164,
     phoneVerified: user.phoneVerified,
+    phoneVerifiedAt: user.phoneVerifiedAt,
+    lastLoginAt: user.lastLoginAt,
     referralCode: user.referralCode,
     referredByUserId: user.referredByUserId,
     validReferralCount: user.validReferralCount,
@@ -73,11 +80,15 @@ export class UserService {
 
     const phoneOwner = await UserModel.findOne({ phoneNumber }).session(session ?? null);
 
-    if (phoneOwner && phoneOwner.telegramId !== telegramId) {
+    if (phoneOwner && phoneOwner.telegramId && phoneOwner.telegramId !== telegramId) {
       throw conflict("Phone number is already linked to another Telegram account", "PHONE_ALREADY_USED");
     }
 
     let user = await UserModel.findOne({ telegramId }).session(session ?? null);
+
+    if (!user && phoneOwner && !phoneOwner.telegramId) {
+      user = phoneOwner;
+    }
 
     if (!user) {
       const referralCode = await UserService.generateUniqueReferralCode();
@@ -103,7 +114,9 @@ export class UserService {
             firstName: input.firstName ?? "",
             lastName: input.lastName ?? "",
             phoneNumber,
+            phoneE164: phoneNumber,
             phoneVerified: true,
+            phoneVerifiedAt: new Date(),
             referralCode,
             referredByUserId,
             role
@@ -126,8 +139,11 @@ export class UserService {
     user.telegramUsername = input.telegramUsername ?? user.telegramUsername;
     user.firstName = input.firstName ?? user.firstName;
     user.lastName = input.lastName ?? user.lastName;
+    user.telegramId = telegramId;
     user.phoneNumber = phoneNumber;
+    user.phoneE164 = phoneNumber;
     user.phoneVerified = true;
+    user.phoneVerifiedAt = user.phoneVerifiedAt ?? new Date();
 
     if (!user.referralCode) {
       user.referralCode = await UserService.generateUniqueReferralCode();
