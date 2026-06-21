@@ -231,7 +231,60 @@ export class TelegramService {
           }).session(mongoSession);
 
           if (existingTelegram) {
-            await TelegramService.sendMessage(message.chat.id.toString(), "Esta cuenta de Telegram ya está vinculada a otro usuario.");
+            const existingPhoneMatches = phoneMatches(existingTelegram.phoneNumber, receivedPhone) ||
+              phoneMatches(existingTelegram.phoneE164 ?? "", receivedPhone);
+
+            if (!existingPhoneMatches) {
+              await TelegramService.sendMessage(message.chat.id.toString(), "Esta cuenta de Telegram ya está vinculada a otro usuario.");
+              return;
+            }
+
+            if (existingTelegram.passwordHash) {
+              await TelegramService.sendMessage(message.chat.id.toString(), "✅ Esta cuenta ya estaba verificada. Vuelve a AurumX e inicia sesión con tu usuario o teléfono y contraseña.");
+              userId = existingTelegram._id.toString();
+
+              pendingSession.status = TELEGRAM_LOGIN_SESSION_STATUSES.VERIFIED;
+              pendingSession.telegramId = telegramId;
+              pendingSession.userId = existingTelegram._id;
+              pendingSession.verifiedAt = new Date();
+              await pendingSession.save({ session: mongoSession });
+              return;
+            }
+
+            existingTelegram.username = user.username;
+            existingTelegram.passwordHash = user.passwordHash;
+            existingTelegram.phoneCountryCode = user.phoneCountryCode;
+            existingTelegram.phoneNationalNumber = user.phoneNationalNumber;
+            existingTelegram.phoneNumber = normalizeTelegramPhone(receivedPhone);
+            existingTelegram.phoneE164 = normalizeTelegramPhone(receivedPhone);
+            existingTelegram.phoneVerified = true;
+            existingTelegram.phoneVerifiedAt = new Date();
+            existingTelegram.telegramUsername = message.from?.username ?? existingTelegram.telegramUsername;
+            existingTelegram.firstName = message.from?.first_name ?? existingTelegram.firstName;
+            existingTelegram.lastName = message.from?.last_name ?? existingTelegram.lastName;
+
+            await UserModel.deleteOne({ _id: user._id }).session(mongoSession);
+            await existingTelegram.save({ session: mongoSession });
+
+            userId = existingTelegram._id.toString();
+
+            pendingSession.status = TELEGRAM_LOGIN_SESSION_STATUSES.VERIFIED;
+            pendingSession.telegramId = telegramId;
+            pendingSession.userId = existingTelegram._id;
+            pendingSession.verifiedAt = new Date();
+            await pendingSession.save({ session: mongoSession });
+
+            await AuditService.log(
+              {
+                actor: { type: AUDIT_ACTOR_TYPES.USER, userId: existingTelegram._id },
+                action: AUDIT_ACTIONS.TELEGRAM_USER_VERIFIED,
+                targetType: "User",
+                targetId: existingTelegram._id,
+                metadata: { telegramId, purpose: "REGISTER_MIGRATED_EXISTING_TELEGRAM_USER" },
+                session: mongoSession
+              }
+            );
+
             return;
           }
 
