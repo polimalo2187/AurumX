@@ -2,8 +2,15 @@ export type UserRole = "USER" | "ADMIN";
 
 export type UserDTO = {
   id: string;
+  username?: string;
   telegramUsername?: string;
   phoneNumber?: string;
+  phoneCountryCode?: string;
+  phoneNationalNumber?: string;
+  phoneE164?: string;
+  phoneVerified?: boolean;
+  phoneVerifiedAt?: string;
+  lastLoginAt?: string;
   referralCode: string;
   validReferralCount: number;
   activePowerPercent: number;
@@ -83,6 +90,12 @@ export type TelegramStartResponse = {
   botUrl: string;
   verificationToken: string;
   expiresInMinutes: number;
+};
+
+export type RegisterResponse = TelegramStartResponse & {
+  userId: string;
+  username: string;
+  phoneNumber: string;
 };
 
 export type AuthResponse = {
