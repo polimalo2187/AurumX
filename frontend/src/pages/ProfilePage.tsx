@@ -37,7 +37,8 @@ export function ProfilePage() {
         <Card className="lg:col-span-2">
           <h2 className="flex items-center gap-2 text-xl font-black"><UserRound className="text-aurum-gold" /> Datos de cuenta</h2>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <Info label="Usuario Telegram" value={user?.telegramUsername || "No disponible"} icon={<BadgeCheck size={18} />} />
+            <Info label="Usuario" value={user?.username || "No disponible"} icon={<BadgeCheck size={18} />} />
+            <Info label="Telegram" value={user?.telegramUsername || "No disponible"} icon={<BadgeCheck size={18} />} />
             <Info label="Teléfono verificado" value={user?.phoneNumber || "No disponible"} icon={<Phone size={18} />} />
             <Info label="Estado" value={user?.status || "—"} icon={<ShieldCheck size={18} />} />
             <Info label="Rol" value={isAdmin ? "Administrador" : "Usuario"} icon={<KeyRound size={18} />} />
