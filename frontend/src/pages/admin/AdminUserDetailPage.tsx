@@ -39,12 +39,17 @@ export function AdminUserDetailPage() {
   const referrals = asRecord(data.referrals);
   const referredUsers = itemsFromPage(asRecord(referrals).referredUsers);
 
-  const machineTotals = useMemo(() => machines.reduce((acc, machine) => {
-    acc.paid += numberValue(machine.paidAmount);
-    acc.max += numberValue(machine.maxPayoutAmount);
-    if (machine.status === "ACTIVE") acc.active += 1;
-    return acc;
-  }, { paid: 0, max: 0, active: 0 }), [machines]);
+  const machineTotals = useMemo(() => {
+    return machines.reduce(
+      (acc: { paid: number; max: number; active: number }, machine: Record<string, unknown>) => {
+        acc.paid += numberValue(machine.paidAmount);
+        acc.max += numberValue(machine.maxPayoutAmount);
+        if (machine.status === "ACTIVE") acc.active += 1;
+        return acc;
+      },
+      { paid: 0, max: 0, active: 0 }
+    );
+  }, [machines]);
 
   if (detail.isLoading) return <div className="screen-center">Cargando usuario...</div>;
 
