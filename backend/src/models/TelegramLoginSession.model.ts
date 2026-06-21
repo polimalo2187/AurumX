@@ -52,6 +52,20 @@ const telegramLoginSessionSchema = new Schema(
       index: true
     },
 
+    expectedPhoneNumber: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true
+    },
+
+    purpose: {
+      type: String,
+      trim: true,
+      default: "LOGIN",
+      index: true
+    },
+
     verifiedAt: {
       type: Date,
       default: null
