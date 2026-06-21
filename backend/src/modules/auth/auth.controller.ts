@@ -7,6 +7,25 @@ import { AuthService } from "./auth.service";
 import { UserService } from "../users/user.service";
 import { TelegramService } from "../telegram/telegram.service";
 
+
+const registerSchema = z.object({
+  username: z.string().min(3).max(24),
+  countryCode: z.string().min(1).max(8),
+  phoneNumber: z.string().min(4).max(24),
+  password: z.string().min(8).max(128),
+  confirmPassword: z.string().min(8).max(128).optional(),
+  referralCode: z.string().optional()
+});
+
+const loginSchema = z.object({
+  identifier: z.string().min(3).max(80),
+  password: z.string().min(8).max(128)
+});
+
+const completeRegistrationSchema = z.object({
+  verificationToken: z.string().min(32).max(64)
+});
+
 const devTelegramVerifySchema = z.object({
   telegramId: z.string().min(1),
   phoneNumber: z.string().min(5),
@@ -29,6 +48,38 @@ const completeTelegramLoginSchema = z.object({
 });
 
 export class AuthController {
+
+  static register = asyncHandler(async (req, res) => {
+    const body = registerSchema.parse(req.body);
+    const result = await AuthService.register(body);
+
+    res.status(201).json({
+      success: true,
+      data: result
+    });
+  });
+
+  static completeRegistration = asyncHandler(async (req, res) => {
+    const body = completeRegistrationSchema.parse(req.body);
+    const userId = await TelegramService.completeLoginSession(body.verificationToken);
+    const result = await AuthService.issueTokenForVerifiedUser(userId);
+
+    res.json({
+      success: true,
+      data: result
+    });
+  });
+
+  static login = asyncHandler(async (req, res) => {
+    const body = loginSchema.parse(req.body);
+    const result = await AuthService.login(body);
+
+    res.json({
+      success: true,
+      data: result
+    });
+  });
+
   static startTelegramLogin = asyncHandler(async (req, res) => {
     const body = startTelegramLoginSchema.parse(req.body);
     const result = await TelegramService.createLoginSession(body.referralCode);
