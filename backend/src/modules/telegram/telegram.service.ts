@@ -1,10 +1,12 @@
 import { createHash, randomBytes } from "crypto";
-import mongoose from "mongoose";
+import mongoose, { type Types } from "mongoose";
 import { env } from "../../config/env";
 import { TelegramLoginSessionModel, TELEGRAM_LOGIN_SESSION_STATUSES } from "../../models/TelegramLoginSession.model";
+import { UserModel } from "../../models/User.model";
 import { AUDIT_ACTIONS, AUDIT_ACTOR_TYPES } from "../../models/AuditLog.model";
 import { badRequest, forbidden, notFound } from "../../utils/errors";
 import { addHours } from "../../utils/dates";
+import { phoneMatches, normalizeTelegramPhone } from "../../utils/phone";
 import { UserService } from "../users/user.service";
 import { AuditService } from "../audit/audit.service";
 
@@ -71,6 +73,45 @@ export class TelegramService {
       targetType: "TelegramLoginSession",
       targetId: null,
       metadata: { referralCode: normalizeReferralCode(referralCode) }
+    });
+
+    return { verificationToken: rawToken, botUrl, expiresInMinutes: LOGIN_SESSION_TTL_HOURS * 60 };
+  }
+
+  static async createRegistrationSession(params: {
+    userId: Types.ObjectId;
+    expectedPhoneNumber: string;
+    referralCode?: string;
+  }) {
+    if (!env.TELEGRAM_BOT_USERNAME) {
+      throw badRequest("TELEGRAM_BOT_USERNAME is not configured", "TELEGRAM_BOT_NOT_CONFIGURED");
+    }
+
+    const rawToken = randomBytes(TELEGRAM_LOGIN_TOKEN_BYTES).toString("hex");
+    const tokenHash = hashToken(rawToken);
+
+    await TelegramLoginSessionModel.create({
+      tokenHash,
+      userId: params.userId,
+      expectedPhoneNumber: normalizeTelegramPhone(params.expectedPhoneNumber),
+      referralCode: normalizeReferralCode(params.referralCode),
+      purpose: "REGISTER",
+      status: TELEGRAM_LOGIN_SESSION_STATUSES.PENDING,
+      expiresAt: addHours(new Date(), LOGIN_SESSION_TTL_HOURS)
+    });
+
+    const botUrl = `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=${TELEGRAM_START_PREFIX}${rawToken}`;
+
+    await AuditService.log({
+      actor: { type: AUDIT_ACTOR_TYPES.SYSTEM },
+      action: AUDIT_ACTIONS.TELEGRAM_LOGIN_SESSION_CREATED,
+      targetType: "TelegramLoginSession",
+      targetId: null,
+      metadata: {
+        referralCode: normalizeReferralCode(params.referralCode),
+        purpose: "REGISTER",
+        userId: params.userId.toString()
+      }
     });
 
     return { verificationToken: rawToken, botUrl, expiresInMinutes: LOGIN_SESSION_TTL_HOURS * 60 };
@@ -165,6 +206,67 @@ export class TelegramService {
 
     try {
       await mongoSession.withTransaction(async () => {
+        if (pendingSession.userId && pendingSession.expectedPhoneNumber) {
+          const expectedPhone = pendingSession.expectedPhoneNumber;
+          const receivedPhone = message.contact?.phone_number ?? "";
+
+          if (!phoneMatches(expectedPhone, receivedPhone)) {
+            await TelegramService.sendMessage(
+              message.chat.id.toString(),
+              "El número compartido no coincide con el número usado en el registro. Vuelve a AurumX y verifica con el mismo teléfono."
+            );
+            return;
+          }
+
+          const user = await UserModel.findById(pendingSession.userId).session(mongoSession);
+
+          if (!user) {
+            await TelegramService.sendMessage(message.chat.id.toString(), "No encontramos la cuenta pendiente. Vuelve a registrarte en AurumX.");
+            return;
+          }
+
+          const existingTelegram = await UserModel.findOne({
+            telegramId,
+            _id: { $ne: user._id }
+          }).session(mongoSession);
+
+          if (existingTelegram) {
+            await TelegramService.sendMessage(message.chat.id.toString(), "Esta cuenta de Telegram ya está vinculada a otro usuario.");
+            return;
+          }
+
+          user.telegramId = telegramId;
+          user.telegramUsername = message.from?.username ?? user.telegramUsername;
+          user.firstName = message.from?.first_name ?? user.firstName;
+          user.lastName = message.from?.last_name ?? user.lastName;
+          user.phoneNumber = normalizeTelegramPhone(receivedPhone);
+          user.phoneE164 = normalizeTelegramPhone(receivedPhone);
+          user.phoneVerified = true;
+          user.phoneVerifiedAt = user.phoneVerifiedAt ?? new Date();
+          await user.save({ session: mongoSession });
+
+          userId = user._id.toString();
+
+          pendingSession.status = TELEGRAM_LOGIN_SESSION_STATUSES.VERIFIED;
+          pendingSession.telegramId = telegramId;
+          pendingSession.userId = user._id;
+          pendingSession.verifiedAt = new Date();
+          await pendingSession.save({ session: mongoSession });
+
+          await AuditService.log(
+            {
+              actor: { type: AUDIT_ACTOR_TYPES.USER, userId: user._id },
+              action: AUDIT_ACTIONS.TELEGRAM_USER_VERIFIED,
+              targetType: "User",
+              targetId: user._id,
+              metadata: { telegramId, purpose: "REGISTER" },
+              session: mongoSession
+            }
+          );
+
+          return;
+        }
+
         const user = await UserService.createOrUpdateTelegramVerifiedUser(
           {
             telegramId,
@@ -191,7 +293,7 @@ export class TelegramService {
             action: AUDIT_ACTIONS.TELEGRAM_USER_VERIFIED,
             targetType: "User",
             targetId: user._id,
-            metadata: { telegramId },
+            metadata: { telegramId, purpose: "LEGACY_TELEGRAM_LOGIN" },
             session: mongoSession
           }
         );
@@ -200,7 +302,11 @@ export class TelegramService {
       await mongoSession.endSession();
     }
 
-    await TelegramService.sendMessage(message.chat.id.toString(), "✅ Cuenta verificada correctamente en AurumX. Ya puedes volver a la plataforma y completar el login.");
+    if (!userId) {
+      return { verified: false, reason: "PHONE_MISMATCH_OR_USER_NOT_FOUND" };
+    }
+
+    await TelegramService.sendMessage(message.chat.id.toString(), "✅ Cuenta verificada correctamente en AurumX. Ya puedes volver a la plataforma e iniciar sesión.");
     return { verified: true, userId };
   }
 
